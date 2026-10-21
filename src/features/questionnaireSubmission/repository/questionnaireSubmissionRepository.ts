@@ -2,19 +2,19 @@ import { db, sequelize } from '@/database/databaseConnection'
 import {
   CreateQuestionnaireSubmissionDto,
   IGetSummaryOptions,
-  IGetSummaryOptionsByRt,
-  IGetSummaryOptionsByRw,
-  IGetSummaryOptionsByUser,
+  IGetSummaryOptionsByClass,
+  IGetSummaryOptionsByGrade,
+  IGetSummaryOptionsByStudent,
   ISummarize,
+  ISummarizeByClassIdDetailed,
+  ISummarizeByGradeId,
+  ISummarizeByGradeIdDetailed,
   ISummarizeByQuestionnaireIdDetailed,
-  ISummarizeByRtIdDetailed,
-  ISummarizeByRwId,
-  ISummarizeByRwIdDetailed,
-  ISummarizeByUserIdDetailed,
-  ISummarizePerRw,
+  ISummarizeByStudentIdDetailed,
+  ISummarizePerGrade,
+  ISummarizeStudentByClass,
   ISummarizeSubmission,
   ISummarizeSubmissionByUser,
-  ISummarizeUserByRt,
   QuestionnaireSubmissionDto,
 } from '../dto'
 import { QuestionnaireRepository } from '../../questionnaire/repository/questionnaireRepository'
@@ -23,20 +23,23 @@ import QuestionnaireSubmission from '@/database/model/questionnaireSubmission'
 import QuestionnaireAnswer from '@/database/model/questionnaireAnswer'
 import QuestionnaireQuestion from '@/database/model/questionnaireQuestion'
 import { QueryTypes } from 'sequelize'
-import { RukunWargaRepository } from '../../rukunWarga/repository/rukunWargaRepository'
-import { RukunTetanggaRepository } from '../../rukunTetangga/repository/rukunTetanggaRepository'
+import { GradeRepository } from '../../grade/repository/gradeRepository'
+import { ClassRepository } from '../../class/repository/classRepository'
 import { UserRepository } from '../../user/repository/userRepository'
 import { Request } from 'express'
 import { QuestionnaireSubmissionQueryRepository } from './questionnaireSubmissionQueryRepository'
 import { UserLoginState } from '../../user/dto'
 import User from '@/database/model/user'
+import UserDetail from '@/database/model/userDetail'
+import Grade from '@/database/model/grade'
+import Class from '@/database/model/class'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
 import Questionnaire from '@/database/model/questionnaire'
 import { evaluateQuestionnaire } from '../../questionnaire/scoring'
 
 const questionnaireRepository = new QuestionnaireRepository()
-const rukunWargaRepository = new RukunWargaRepository()
-const rukunTetanggaRepository = new RukunTetanggaRepository()
+const gradeRepository = new GradeRepository()
+const classRepository = new ClassRepository()
 const userRepository = new UserRepository()
 
 export class QuestionnaireSubmissionRepository {
@@ -95,7 +98,9 @@ export class QuestionnaireSubmissionRepository {
       where: whereCondition,
     })
 
-    const dataCount = await QuestionnaireSubmission.count({ where: whereCondition })
+    const dataCount = await QuestionnaireSubmission.count({
+      where: whereCondition,
+    })
 
     return {
       data,
@@ -119,7 +124,7 @@ export class QuestionnaireSubmissionRepository {
       options.QuestionnaireId
     )
 
-    const replacements: IGetSummaryOptions = {
+    const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
     }
 
@@ -138,7 +143,7 @@ export class QuestionnaireSubmissionRepository {
     }
 
     const query = `
-    WITH RwRtCounts AS (SELECT RukunWargaId, COUNT(id) AS totalRt FROM rukun_tetanggas GROUP BY RukunWargaId),
+    WITH ClassCounts AS (SELECT GradeId, COUNT(id) AS totalClass FROM classes GROUP BY GradeId),
 
     LatestSubmissionsInRange AS (SELECT id, UserId, isRisk FROM
     ( SELECT qs.id, qs.UserId, qs.isRisk, ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
@@ -149,35 +154,35 @@ export class QuestionnaireSubmissionRepository {
     JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = ls.id
     GROUP BY ls.UserId, ls.isRisk),
     
-    UserMentalState AS (SELECT ud.UserId, ud.RukunWargaId,
+    UserMentalState AS (SELECT ud.UserId, ud.GradeId,
     CASE
       WHEN ds.trueCount IS NULL THEN NULL
       WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
-      WHEN ds.trueCount >= (select riskThreshold FROM questionnaires where id = :QuestionnaireId) THEN 1
+      WHEN ds.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 1
       ELSE 0
     END AS healthStatus
     FROM user_details ud LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId)
     
-    SELECT rw.name AS rwName, rw.id as rwId,
-    CAST(COALESCE(rtc.totalRt, 0) AS SIGNED) AS rtCount,
+    SELECT g.name AS gradeName, g.id AS gradeId,
+    g.name AS rwName, g.id AS rwId,
+    CAST(COALESCE(cc.totalClass, 0) AS SIGNED) AS classCount,
+    CAST(COALESCE(cc.totalClass, 0) AS SIGNED) AS rtCount,
     CAST(COUNT(ud.UserId) AS SIGNED) AS userCount,
     CAST(COUNT(ums.UserId) AS SIGNED) AS submitCount,
     CAST(SUM(CASE WHEN ums.healthStatus = 0 THEN 1 ELSE 0 END) AS SIGNED) AS stableMentalCount,
     CAST(SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) AS SIGNED) AS unStableMentalCount,
-    CAST(COALESCE((SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100) / NULLIF(COUNT(ums.UserId), 0),0) AS UNSIGNED) AS unStableMentalPercentage
-    FROM rukun_wargas rw
-    LEFT JOIN user_details ud ON ud.RukunWargaId = rw.id
-    LEFT JOIN (SELECT UserId, RukunWargaId, healthStatus
+    CAST(COALESCE((SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100) / NULLIF(COUNT(ums.UserId), 0), 0) AS UNSIGNED) AS unStableMentalPercentage
+    FROM grades g
+    LEFT JOIN user_details ud ON ud.GradeId = g.id
+    LEFT JOIN (SELECT UserId, GradeId, healthStatus
     FROM UserMentalState
     WHERE healthStatus IS NOT NULL OR EXISTS (SELECT 1 FROM UnstableMentalScore WHERE UnstableMentalScore.UserId = UserMentalState.UserId)) ums ON ud.UserId = ums.UserId
-    LEFT JOIN RwRtCounts rtc ON rw.id = rtc.RukunWargaId
-    GROUP BY rw.id, rw.name, rtc.totalRt
-    ORDER BY rw.name;`
+    LEFT JOIN ClassCounts cc ON g.id = cc.GradeId
+    GROUP BY g.id, g.name, cc.totalClass
+    ORDER BY g.name;`
 
-    const resultQuery = await sequelize.query<ISummarizePerRw>(query, {
-      replacements: {
-        ...replacements,
-      },
+    const resultQuery = await sequelize.query<ISummarizePerGrade>(query, {
+      replacements,
       type: QueryTypes.SELECT,
     })
 
@@ -205,37 +210,45 @@ export class QuestionnaireSubmissionRepository {
           )
         : 0
 
+    const perGrade: ISummarizePerGrade[] = resultQuery.map((row) => ({
+      gradeId: row.gradeId,
+      gradeName: row.gradeName,
+      classCount: row.classCount,
+      userCount: row.userCount,
+      submitCount: row.submitCount,
+      stableMentalCount: row.stableMentalCount,
+      unStableMentalCount: row.unStableMentalCount,
+      unStableMentalPercentage: row.unStableMentalPercentage,
+      // Backward compatibility aliases
+      rwId: row.gradeId,
+      rwName: row.gradeName,
+      rtCount: row.classCount,
+    }))
+
     const data: ISummarizeByQuestionnaireIdDetailed = {
       summarize,
-      perRw: resultQuery.map((row) => ({
-        rwId: row.rwId,
-        rwName: row.rwName,
-        rtCount: row.rtCount,
-        userCount: row.userCount,
-        submitCount: row.submitCount,
-        stableMentalCount: row.stableMentalCount,
-        unStableMentalCount: row.unStableMentalCount,
-        unStableMentalPercentage: row.unStableMentalPercentage,
-      })),
+      perGrade,
+      perRw: perGrade,
     }
 
     return data
   }
 
-  async summarizeByRwId(
-    options: IGetSummaryOptionsByRw
-  ): Promise<ISummarizeByRwIdDetailed> {
+  async summarizeByGradeId(
+    options: IGetSummaryOptionsByGrade
+  ): Promise<ISummarizeByGradeIdDetailed> {
     const { startDate, endDate } = options
+    const gradeId = options.GradeId || options.RukunWargaId!
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
     )
 
-    const rw = await rukunWargaRepository.getByPk(options.RukunWargaId)
+    const grade = await gradeRepository.getByPk(gradeId)
 
-    const replacements: IGetSummaryOptionsByRw = {
+    const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
-      RukunWargaId: rw.id,
+      GradeId: grade.id,
     }
 
     let dateFilter = ''
@@ -253,81 +266,86 @@ export class QuestionnaireSubmissionRepository {
     }
 
     const query = `
-    WITH RtUserCounts AS (SELECT
-      rt.id AS RukunTetanggaId,
-      rt.RukunWargaId,
-      COUNT(ud.UserId) AS userCount
-    FROM rukun_tetanggas rt
-    LEFT JOIN user_details ud ON ud.RukunTetanggaId = rt.id
-    WHERE rt.RukunWargaId = :RukunWargaId
-    GROUP BY rt.id, rt.RukunWargaId),
+    WITH ClassUserCounts AS (
+      SELECT
+        c.id AS ClassId,
+        c.GradeId,
+        COUNT(ud.UserId) AS userCount
+      FROM classes c
+      LEFT JOIN user_details ud ON ud.ClassId = c.id
+      WHERE c.GradeId = :GradeId
+      GROUP BY c.id, c.GradeId
+    ),
     
     LatestSubmissionsInRange AS (
-    SELECT id, UserId, isRisk
-    FROM (
-      SELECT
-        qs.id,
-        qs.UserId,
-        qs.isRisk,
-        ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
-      FROM questionnaire_submissions qs
-      WHERE qs.QuestionnaireId = :QuestionnaireId
-        ${dateFilter}
-    ) t
-    WHERE t.rn = 1),
+      SELECT id, UserId, isRisk
+      FROM (
+        SELECT
+          qs.id,
+          qs.UserId,
+          qs.isRisk,
+          ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
+        FROM questionnaire_submissions qs
+        WHERE qs.QuestionnaireId = :QuestionnaireId
+          ${dateFilter}
+      ) t
+      WHERE t.rn = 1
+    ),
 
     UnstableMentalScore AS (
-    SELECT
-      ls.UserId,
-      ls.isRisk,
-      SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END) AS trueCount
-    FROM LatestSubmissionsInRange ls
-    JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = ls.id
-    GROUP BY ls.UserId, ls.isRisk),
+      SELECT
+        ls.UserId,
+        ls.isRisk,
+        SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END) AS trueCount
+      FROM LatestSubmissionsInRange ls
+      JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = ls.id
+      GROUP BY ls.UserId, ls.isRisk
+    ),
 
     UserMentalState AS (
-    SELECT
-      ud.UserId,
-      ud.RukunWargaId,
-      ud.RukunTetanggaId,
-      CASE
-        WHEN ds.trueCount IS NULL THEN NULL
-        WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
-        WHEN ds.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
-        ELSE 0
-      END AS healthStatus
-    FROM user_details ud
-    LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId)
+      SELECT
+        ud.UserId,
+        ud.GradeId,
+        ud.ClassId,
+        CASE
+          WHEN ds.trueCount IS NULL THEN NULL
+          WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
+          WHEN ds.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 1
+          ELSE 0
+        END AS healthStatus
+      FROM user_details ud
+      LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId
+    )
 
     SELECT
-    rt.name AS rtName, rt.id as rtId,
-    CAST(COALESCE(ruc.userCount, 0) AS SIGNED) AS userCount,
-    CAST(COUNT(ums.UserId) AS SIGNED) AS submitCount,
-    CAST(SUM(CASE WHEN ums.healthStatus = 0 THEN 1 ELSE 0 END) AS SIGNED) AS stableMentalCount,
-    CAST(SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) AS SIGNED) AS unStableMentalCount,
-    CAST(
-      COALESCE(
-        (SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100)
-        / NULLIF(COUNT(ums.UserId), 0),
-        0
-      ) AS UNSIGNED
-    ) AS unStableMentalPercentage
-    FROM rukun_tetanggas rt
-    LEFT JOIN RtUserCounts ruc ON ruc.RukunTetanggaId = rt.id
+      c.name AS className, c.id AS classId,
+      c.name AS rtName, c.id AS rtId,
+      CAST(COALESCE(cuc.userCount, 0) AS SIGNED) AS userCount,
+      CAST(COUNT(ums.UserId) AS SIGNED) AS submitCount,
+      CAST(SUM(CASE WHEN ums.healthStatus = 0 THEN 1 ELSE 0 END) AS SIGNED) AS stableMentalCount,
+      CAST(SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) AS SIGNED) AS unStableMentalCount,
+      CAST(
+        COALESCE(
+          (SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100)
+          / NULLIF(COUNT(ums.UserId), 0),
+          0
+        ) AS UNSIGNED
+      ) AS unStableMentalPercentage
+    FROM classes c
+    LEFT JOIN ClassUserCounts cuc ON cuc.ClassId = c.id
     LEFT JOIN (
-    SELECT UserId, RukunWargaId, RukunTetanggaId, healthStatus
-    FROM UserMentalState
-    WHERE healthStatus IS NOT NULL OR EXISTS (
-      SELECT 1 FROM UnstableMentalScore ds WHERE ds.UserId = UserMentalState.UserId
-    )) ums ON rt.id = ums.RukunTetanggaId
-    WHERE rt.RukunWargaId = :RukunWargaId
-    GROUP BY rt.id, rt.name, ruc.userCount
-    ORDER BY rt.name;`
+      SELECT UserId, GradeId, ClassId, healthStatus
+      FROM UserMentalState
+      WHERE healthStatus IS NOT NULL OR EXISTS (
+        SELECT 1 FROM UnstableMentalScore ds WHERE ds.UserId = UserMentalState.UserId
+      )
+    ) ums ON c.id = ums.ClassId
+    WHERE c.GradeId = :GradeId
+    GROUP BY c.id, c.name, cuc.userCount
+    ORDER BY c.name;`
 
-    const resultQuery = await sequelize.query<ISummarizeByRwId>(query, {
-      replacements: {
-        ...replacements,
-      },
+    const resultQuery = await sequelize.query<ISummarizeByGradeId>(query, {
+      replacements,
       type: QueryTypes.SELECT,
     })
 
@@ -355,39 +373,50 @@ export class QuestionnaireSubmissionRepository {
           )
         : 0
 
-    const data: ISummarizeByRwIdDetailed = {
+    const perClass: ISummarizeByGradeId[] = resultQuery.map((row) => ({
+      classId: row.classId,
+      className: row.className,
+      userCount: row.userCount,
+      submitCount: row.submitCount,
+      stableMentalCount: row.stableMentalCount,
+      unStableMentalCount: row.unStableMentalCount,
+      unStableMentalPercentage: row.unStableMentalPercentage,
+      // Backward compatibility aliases
+      rtId: row.classId,
+      rtName: row.className,
+    }))
+
+    const data: ISummarizeByGradeIdDetailed = {
       summarize,
-      perRt: resultQuery.map((row) => ({
-        rtId: row.rtId,
-        rtName: row.rtName,
-        userCount: row.userCount,
-        submitCount: row.submitCount,
-        stableMentalCount: row.stableMentalCount,
-        unStableMentalCount: row.unStableMentalCount,
-        unStableMentalPercentage: row.unStableMentalPercentage,
-      })),
+      perClass,
+      perRt: perClass,
     }
 
     return data
   }
 
-  async summarizeByRtId(
-    options: IGetSummaryOptionsByRt
-  ): Promise<ISummarizeByRtIdDetailed> {
+  // Backward compatibility alias for summarizeByRwId
+  async summarizeByRwId(
+    options: IGetSummaryOptionsByGrade
+  ): Promise<ISummarizeByGradeIdDetailed> {
+    return this.summarizeByGradeId(options)
+  }
+
+  async summarizeByClassId(
+    options: IGetSummaryOptionsByClass
+  ): Promise<ISummarizeByClassIdDetailed> {
     const { startDate, endDate } = options
+    const classId = options.ClassId || options.RukunTetanggaId!
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
     )
 
-    const rw = await rukunWargaRepository.getByPk(options.RukunWargaId)
-
-    const rt = await rukunTetanggaRepository.getByPk(options.RukunTetanggaId)
+    const cls = await classRepository.getByPk(classId)
 
     const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
-      RukunWargaId: rw.id,
-      RukunTetanggaId: rt.id,
+      ClassId: cls.id,
     }
 
     let dateFilter = ''
@@ -409,6 +438,9 @@ export class QuestionnaireSubmissionRepository {
           qs.id,
           qs.UserId,
           qs.isRisk,
+          qs.score,
+          qs.resultKey,
+          qs.resultLabel,
           qs.createdAt AS submissionDate,
           ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
         FROM questionnaire_submissions qs
@@ -417,63 +449,75 @@ export class QuestionnaireSubmissionRepository {
       ),
 
       UnstableMentalScore AS (
-        SELECT ls.UserId, ls.submissionDate, ls.isRisk,
+        SELECT ls.UserId, ls.submissionDate, ls.isRisk, ls.score, ls.resultKey, ls.resultLabel,
         SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END) AS trueCount
         FROM LatestSubmissionsInRange ls
         JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = ls.id
         WHERE ls.rn = 1
-        GROUP BY ls.UserId, ls.submissionDate, ls.isRisk
+        GROUP BY ls.UserId, ls.submissionDate, ls.isRisk, ls.score, ls.resultKey, ls.resultLabel
       ),
 
       UserMentalState AS (
         SELECT
           ud.id,
-          u.id as UserId,
+          u.id AS UserId,
           u.fullname,
-          ud.RukunTetanggaId,
+          ud.nisn,
+          ud.ClassId,
+          ud.GradeId,
           ds.submissionDate AS lastSubmissionDate,
+          ds.score,
+          ds.resultKey,
+          ds.resultLabel,
           CASE
             WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
-            WHEN ds.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
-            ELSE 0
+            WHEN ds.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 1
+            WHEN ds.trueCount IS NOT NULL THEN 0
+            ELSE NULL
           END AS isMentalUnStable
         FROM user_details ud
-        INNER JOIN users u on ud.UserId = u.id
-        JOIN UnstableMentalScore ds ON ds.UserId = ud.UserId
+        INNER JOIN users u ON ud.UserId = u.id
+        LEFT JOIN UnstableMentalScore ds ON ds.UserId = ud.UserId
+        WHERE ud.ClassId = :ClassId
       )
 
       SELECT
         um.UserId,
         um.fullname,
+        um.nisn,
         um.lastSubmissionDate,
-        um.isMentalUnStable
+        um.isMentalUnStable,
+        um.score,
+        um.resultKey,
+        um.resultLabel
       FROM UserMentalState um
-      JOIN rukun_tetanggas rt ON um.RukunTetanggaId = rt.id
-      JOIN rukun_wargas rw ON rt.RukunWargaId = rw.id
-      WHERE rw.id = :RukunWargaId AND rt.id = :RukunTetanggaId
-      ORDER BY rw.name, rt.name, um.fullname;
+      JOIN classes c ON um.ClassId = c.id
+      WHERE c.id = :ClassId
+      ORDER BY um.fullname;
     `
 
-    const rows = await sequelize.query<ISummarizeUserByRt>(query, {
+    const rows = await sequelize.query<ISummarizeStudentByClass>(query, {
       replacements,
       type: QueryTypes.SELECT,
     })
 
-    const users = rows.map((r) => ({
+    const students: ISummarizeStudentByClass[] = rows.map((r) => ({
       UserId: r.UserId,
       fullname: r.fullname,
+      nisn: r.nisn,
       lastSubmissionDate: r.lastSubmissionDate,
-      isMentalUnStable: !!r.isMentalUnStable,
+      isMentalUnStable: r.isMentalUnStable !== null ? !!r.isMentalUnStable : null,
+      score: r.score !== undefined ? r.score : null,
+      resultKey: r.resultKey || null,
+      resultLabel: r.resultLabel || null,
     }))
 
-    const submitCount = users.filter((u) => u.lastSubmissionDate).length
-
-    const unStableMentalCount = users.filter((u) => u.isMentalUnStable).length
-
-    const stableMentalCount = submitCount - unStableMentalCount
+    const submitCount = students.filter((u) => u.lastSubmissionDate).length
+    const unStableMentalCount = students.filter((u) => u.isMentalUnStable === true).length
+    const stableMentalCount = students.filter((u) => u.isMentalUnStable === false).length
 
     const summarize: ISummarize = {
-      userCount: users.length,
+      userCount: students.length,
       submitCount,
       stableMentalCount,
       unStableMentalCount,
@@ -483,34 +527,47 @@ export class QuestionnaireSubmissionRepository {
           : 0,
     }
 
-    const data: ISummarizeByRtIdDetailed = {
+    const data: ISummarizeByClassIdDetailed = {
       summarize,
-      users,
+      students,
+      users: students,
     }
 
     return data
   }
 
-  async summarizeByUserId(
-    options: IGetSummaryOptionsByUser
-  ): Promise<ISummarizeByUserIdDetailed> {
-    const { startDate, endDate } = options
+  // Backward compatibility alias for summarizeByRtId
+  async summarizeByRtId(
+    options: IGetSummaryOptionsByClass
+  ): Promise<ISummarizeByClassIdDetailed> {
+    return this.summarizeByClassId(options)
+  }
 
-    const rw = await rukunWargaRepository.getByPk(options.RukunWargaId)
-
-    const rt = await rukunTetanggaRepository.getByPk(options.RukunTetanggaId)
+  async summarizeByStudentId(
+    options: IGetSummaryOptionsByStudent
+  ): Promise<ISummarizeByStudentIdDetailed> {
+    const { startDate, endDate, UserId } = options
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
     )
 
-    const user = await userRepository.getById(options.UserId)
+    const studentUser = await User.findByPk(UserId, {
+      include: [
+        {
+          model: UserDetail,
+          include: [{ model: Grade }, { model: Class }],
+        },
+      ],
+    })
+
+    if (!studentUser) {
+      throw new ErrorResponse.NotFound('user.notFound')
+    }
 
     const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
-      RukunWargaId: rw.id,
-      RukunTetanggaId: rt.id,
-      UserId: user.id,
+      UserId: studentUser.id,
     }
 
     let dateFilter = ''
@@ -529,78 +586,81 @@ export class QuestionnaireSubmissionRepository {
 
     const query = `
     WITH UserSubmissions AS (
-    SELECT
-      qs.id AS submissionId,
-      qs.UserId,
-      qs.createdAt AS submissionDate,
-      qs.score,
-      qs.resultKey,
-      qs.resultLabel,
-      qs.isRisk
-    FROM questionnaire_submissions qs
-    JOIN user_details ud ON ud.UserId = qs.UserId
-    JOIN rukun_tetanggas rt ON ud.RukunTetanggaId = rt.id
-    JOIN rukun_wargas rw ON rt.RukunWargaId = rw.id
-    WHERE qs.QuestionnaireId = :QuestionnaireId
-      AND rw.id = :RukunWargaId
-      AND rt.id = :RukunTetanggaId
-      AND ud.UserId = :UserId
-      ${dateFilter}),
+      SELECT
+        qs.id AS submissionId,
+        qs.UserId,
+        qs.createdAt AS submissionDate,
+        qs.score,
+        qs.resultKey,
+        qs.resultLabel,
+        qs.isRisk,
+        qs.scoringResult
+      FROM questionnaire_submissions qs
+      WHERE qs.QuestionnaireId = :QuestionnaireId
+        AND qs.UserId = :UserId
+        ${dateFilter}
+    ),
 
     AnswerCounts AS (
-    SELECT
-      us.submissionId,
-      us.submissionDate,
-      us.score,
-      us.resultKey,
-      us.resultLabel,
-      us.isRisk,
-      SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END) AS trueCount
-    FROM UserSubmissions us
-    JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = us.submissionId
-    GROUP BY us.submissionId, us.submissionDate, us.score, us.resultKey, us.resultLabel, us.isRisk)
+      SELECT
+        us.submissionId,
+        us.submissionDate,
+        us.score,
+        us.resultKey,
+        us.resultLabel,
+        us.isRisk,
+        us.scoringResult,
+        SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END) AS trueCount
+      FROM UserSubmissions us
+      LEFT JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = us.submissionId
+      GROUP BY us.submissionId, us.submissionDate, us.score, us.resultKey, us.resultLabel, us.isRisk, us.scoringResult
+    )
 
     SELECT
       ac.submissionId,
       ac.submissionDate,
       COALESCE(ac.score, ac.trueCount) AS score,
       ac.trueCount,
-      COALESCE(ac.resultKey, CASE WHEN ac.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 'risk' ELSE 'stable' END) AS resultKey,
-      COALESCE(ac.resultLabel, CASE WHEN ac.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 'Berisiko' ELSE 'Stabil' END) AS resultLabel,
-    CASE
-      WHEN ac.isRisk IS NOT NULL THEN ac.isRisk
-      WHEN ac.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
-      ELSE 0
-    END AS isMentalUnStable
+      COALESCE(ac.resultKey, CASE WHEN ac.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 'risk' ELSE 'stable' END) AS resultKey,
+      COALESCE(ac.resultLabel, CASE WHEN ac.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 'Berisiko' ELSE 'Stabil' END) AS resultLabel,
+      CASE
+        WHEN ac.isRisk IS NOT NULL THEN ac.isRisk
+        WHEN ac.trueCount >= (SELECT riskThreshold FROM questionnaires WHERE id = :QuestionnaireId) THEN 1
+        ELSE 0
+      END AS isMentalUnStable,
+      ac.scoringResult
     FROM AnswerCounts ac
     ORDER BY ac.submissionDate DESC;`
 
-    const submissions = await sequelize.query<ISummarizeSubmissionByUser>(
-      query,
-      {
-        replacements,
-        type: QueryTypes.SELECT,
-      }
-    )
+    const rawSubmissions = await sequelize.query<any>(query, {
+      replacements,
+      type: QueryTypes.SELECT,
+    })
+
+    const submissions: ISummarizeSubmissionByUser[] = rawSubmissions.map((s) => ({
+      submissionId: s.submissionId,
+      submissionDate: s.submissionDate,
+      score: Number(s.score),
+      resultKey: s.resultKey,
+      resultLabel: s.resultLabel,
+      isMentalUnStable: !!s.isMentalUnStable,
+      scoringResult: typeof s.scoringResult === 'string' ? JSON.parse(s.scoringResult) : s.scoringResult,
+    }))
 
     const submitCount = submissions.length
-
-    const stableMentalCount = submissions.filter(
-      (s) => !s.isMentalUnStable
-    ).length
-
-    const unStableMentalCount = submissions.filter(
-      (s) => s.isMentalUnStable
-    ).length
-
+    const stableMentalCount = submissions.filter((s) => !s.isMentalUnStable).length
+    const unStableMentalCount = submissions.filter((s) => s.isMentalUnStable).length
     const unStableMentalPercentage =
       submitCount > 0
         ? Math.round((unStableMentalCount * 100) / submitCount)
         : 0
 
-    const data: ISummarizeByUserIdDetailed = {
-      UserId: user.id,
-      fullname: user.fullname,
+    const data: ISummarizeByStudentIdDetailed = {
+      UserId: studentUser.id,
+      fullname: studentUser.fullname,
+      nisn: studentUser.userDetail?.nisn || null,
+      gradeName: studentUser.userDetail?.grade?.name || null,
+      className: studentUser.userDetail?.class?.name || null,
       summarize: {
         submitCount,
         stableMentalCount,
@@ -611,6 +671,13 @@ export class QuestionnaireSubmissionRepository {
     }
 
     return data
+  }
+
+  // Backward compatibility alias for summarizeByUserId
+  async summarizeByUserId(
+    options: IGetSummaryOptionsByStudent
+  ): Promise<ISummarizeByStudentIdDetailed> {
+    return this.summarizeByStudentId(options)
   }
 
   async submissionDetail(id: string): Promise<ISummarizeSubmission> {
@@ -692,8 +759,12 @@ export class QuestionnaireSubmissionRepository {
       throw new ErrorResponse.BadRequest('questionnaire.exceededAnswer')
     }
 
-    const questionIds = new Set(questionnaire.questions.map((question) => question.id))
-    const submittedQuestionIds = formData.answers.map((answer) => answer.QuestionId)
+    const questionIds = new Set(
+      questionnaire.questions.map((question) => question.id)
+    )
+    const submittedQuestionIds = formData.answers.map(
+      (answer) => answer.QuestionId
+    )
 
     if (new Set(submittedQuestionIds).size !== submittedQuestionIds.length) {
       throw new ErrorResponse.BadRequest('questionnaire.duplicateAnswer')
@@ -748,7 +819,9 @@ export class QuestionnaireSubmissionRepository {
       )
 
       for (const answer of formData.answers) {
-        const evaluatedAnswer = evaluatedAnswerByQuestion.get(answer.QuestionId)!
+        const evaluatedAnswer = evaluatedAnswerByQuestion.get(
+          answer.QuestionId
+        )!
 
         bulkCreate.push({
           answerValue: evaluatedAnswer.answerValue,

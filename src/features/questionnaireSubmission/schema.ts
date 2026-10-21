@@ -28,31 +28,42 @@ export const summarizeByQuestionnaireIdQuery = yup.object().shape({
   endDate: yup.date().optional(),
 })
 
-export const summarizeByRwIdQuery = summarizeByQuestionnaireIdQuery.shape({
-  RukunWargaId: yup.string().required('validation.required'),
+export const summarizeByGradeIdQuery = summarizeByQuestionnaireIdQuery.shape({
+  GradeId: yup.string().optional(),
+  RukunWargaId: yup.string().optional(),
 })
+export const summarizeByRwIdQuery = summarizeByGradeIdQuery
 
-export const summarizeByRtIdQuery = summarizeByRwIdQuery.shape({
-  RukunTetanggaId: yup.string().required('validation.required'),
+export const summarizeByClassIdQuery = summarizeByGradeIdQuery.shape({
+  ClassId: yup.string().optional(),
+  RukunTetanggaId: yup.string().optional(),
 })
+export const summarizeByRtIdQuery = summarizeByClassIdQuery
 
-export const summarizeByUserIdQuery = summarizeByRtIdQuery.shape({
-  UserId: yup.string().required('validation.required'),
+export const summarizeByStudentIdQuery = summarizeByClassIdQuery.shape({
+  UserId: yup.string().optional(),
+  StudentId: yup.string().optional(),
 })
+export const summarizeByUserIdQuery = summarizeByStudentIdQuery
+
 export type SubmissionParams = yup.InferType<typeof submissionParams>
-
 export type SummarizeByQuestionnaireIdQuery = yup.InferType<
   typeof summarizeByQuestionnaireIdQuery
 >
-
 export type SummarizeByQuestionnaireIdParams = yup.InferType<
   typeof summarizeByQuestionnaireIdParams
 >
-
-export type SummarizeByRwIdQuery = yup.InferType<typeof summarizeByRwIdQuery>
-
-export type SummarizeByRtIdQuery = yup.InferType<typeof summarizeByRtIdQuery>
-
-export type SummarizeByUserIdQuery = yup.InferType<
-  typeof summarizeByUserIdQuery
+export type SummarizeByGradeIdQuery = yup.InferType<
+  typeof summarizeByGradeIdQuery
 >
+export type SummarizeByRwIdQuery = SummarizeByGradeIdQuery
+
+export type SummarizeByClassIdQuery = yup.InferType<
+  typeof summarizeByClassIdQuery
+>
+export type SummarizeByRtIdQuery = SummarizeByClassIdQuery
+
+export type SummarizeByStudentIdQuery = yup.InferType<
+  typeof summarizeByStudentIdQuery
+>
+export type SummarizeByUserIdQuery = SummarizeByStudentIdQuery
