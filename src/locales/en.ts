@@ -22,9 +22,11 @@ export default {
 
   auth: {
     loginFailed: 'Invalid email or password',
-    loginNikFailed: 'Invalid nik or password',
+    loginNikFailed: 'Invalid NISN or password',
+    loginNisnFailed: 'Invalid NISN or password',
     emailUsed: 'Email is already registered',
     nikUsed: 'NIK is already registered',
+    nisnUsed: 'NISN is already registered',
     phoneUsed: 'Phone number is already registered',
     loginSuccess: 'Login successfully',
     registerSuccess: 'User registered successfully',
@@ -90,6 +92,11 @@ export default {
   attributes: {
     fullname: 'Full Name',
     nik: 'NIK',
+    nisn: 'NISN',
+    GradeId: 'Grade',
+    ClassId: 'Class',
+    TingkatId: 'Grade',
+    KelasId: 'Class',
     email: 'Email Address',
     phoneNumber: 'Phone Number',
     password: 'Password',
