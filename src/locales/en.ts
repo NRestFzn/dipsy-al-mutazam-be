@@ -25,7 +25,7 @@ export default {
     loginNikFailed: 'Invalid NISN or password',
     loginNisnFailed: 'Invalid NISN or password',
     emailUsed: 'Email is already registered',
-    nikUsed: 'NIK is already registered',
+    nikUsed: 'NISN is already registered',
     nisnUsed: 'NISN is already registered',
     phoneUsed: 'Phone number is already registered',
     loginSuccess: 'Login successfully',
@@ -39,11 +39,35 @@ export default {
     inCompleteDetail: 'User has not filled complete data',
   },
 
+  student: {
+    created: 'Student data created successfully',
+    retrieved: 'Student data retrieved successfully',
+    updated: 'Student data updated successfully',
+    deleted: 'Student data deleted successfully',
+    notFound: 'Student data not found',
+  },
+
+  grade: {
+    created: 'Grade data created successfully',
+    retrieved: 'Grade data retrieved successfully',
+    updated: 'Grade data updated successfully',
+    deleted: 'Grade data deleted successfully',
+    notFound: 'Grade data not found',
+  },
+
+  class: {
+    created: 'Class data created successfully',
+    retrieved: 'Class data retrieved successfully',
+    updated: 'Class data updated successfully',
+    deleted: 'Class data deleted successfully',
+    notFound: 'Class data not found',
+  },
+
   questionnaire: {
     duplicateOrder: 'Duplicate order found',
     inCompleteAnswer: 'Please answer all available questions',
     exceededAnswer: 'Submitted answers exceed the available questions',
-    notFound: 'QUestionnaire not found',
+    notFound: 'Questionnaire not found',
     questionNotFound: 'Question with id {id} not found',
     noQuestion: "Questionnaire doesn't have question yet",
     invalidScoringConfig: 'Questionnaire scoring configuration is invalid',
@@ -54,26 +78,6 @@ export default {
     duplicateAnswer: 'A question cannot be answered more than once',
     questionNotInQuestionnaire:
       'Question with id {id} does not belong to this questionnaire',
-  },
-
-  odgjResident: {
-    retrieved: 'ODGJ resident data retrieved successfully',
-    created: 'ODGJ resident added successfully',
-    updated: 'ODGJ resident data updated successfully',
-    deleted: 'ODGJ resident data deleted successfully',
-    notFound: 'ODGJ resident data not found',
-    duplicate: 'Resident is already registered as ODGJ',
-    residentNotFound: 'Resident not found',
-    scheduleCreated: 'Examination schedule added successfully',
-    recurringSchedulesCreated:
-      'Recurring examination schedules added successfully',
-    scheduleUpdated: 'Examination schedule updated successfully',
-    scheduleDeleted: 'Examination schedule deleted successfully',
-    scheduleNotFound: 'Examination schedule not found',
-    recurrenceCountMin:
-      'Recurring examination schedules require at least 2 meetings',
-    recurrenceCountMax:
-      'Recurring examination schedules cannot exceed 120 meetings',
   },
 
   validation: {
@@ -91,24 +95,23 @@ export default {
 
   attributes: {
     fullname: 'Full Name',
-    nik: 'NIK',
+    nik: 'NISN',
     nisn: 'NISN',
+    nis: 'NIS',
+    entryYear: 'Entry Year',
+    academicYear: 'Academic Year',
     GradeId: 'Grade',
     ClassId: 'Class',
     TingkatId: 'Grade',
     KelasId: 'Class',
+    RukunWargaId: 'Grade',
+    RukunTetanggaId: 'Class',
     email: 'Email Address',
     phoneNumber: 'Phone Number',
     password: 'Password',
     confirmPassword: 'Confirm Password',
     gender: 'Gender',
     birthDate: 'Birth Date',
-    profession: 'Profession',
-    RukunWargaId: 'Rukun Warga',
-    RukunTetanggaId: 'Rukun Tetangga',
-    MarriageStatusId: 'Marriage Status',
-    EducationId: 'Education',
-    SalaryRangeId: 'Salary Range',
     title: 'Title',
     description: 'Description',
     status: 'Status',
@@ -132,14 +135,8 @@ export default {
     answerValue: 'Answer Value',
     startDate: 'Start Date',
     endDate: 'End Date',
-    isKader: 'Kader Status',
     confirmNewPassword: 'Confirm New Password',
     count: 'Total Count',
     name: 'Name',
-    examinationDate: 'Examination Date',
-    notes: 'Notes',
-    scheduleId: 'Schedule ID',
-    recurrenceType: 'Recurrence Type',
-    recurrenceCount: 'Number of Meetings',
   },
 }
