@@ -7,38 +7,52 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('questionnaireQuestion', {
+  await queryInterface.createTable('questionnaires', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    questionText: {
+    title: {
       allowNull: false,
       type: Sequelize.STRING,
     },
-    questionType: {
+    description: {
       allowNull: false,
-      type: Sequelize.STRING,
-    },
-    order: {
-      allowNull: false,
-      type: Sequelize.INTEGER,
+      type: Sequelize.TEXT,
     },
     status: {
       allowNull: false,
       type: Sequelize.ENUM('draft', 'publish'),
     },
-    QuestionnaireId: {
+    riskThreshold: {
+      allowNull: false,
+      type: Sequelize.INTEGER,
+    },
+    cooldownInMinutes: {
+      allowNull: false,
+      type: Sequelize.INTEGER,
+      defaultValue: 0,
+    },
+    scoringType: {
+      allowNull: false,
+      type: Sequelize.STRING,
+      defaultValue: 'binary_threshold',
+    },
+    scoringConfig: {
+      allowNull: true,
+      type: Sequelize.JSON,
+    },
+    CategoryId: {
       allowNull: false,
       type: Sequelize.UUID,
       references: {
-        model: 'questionnaire',
+        model: 'questionnaire_categories',
         key: 'id',
       },
-      onUpdate: 'cascade',
-      onDelete: 'cascade',
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
     },
     createdAt: {
       allowNull: false,
@@ -55,5 +69,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('questionnaireQuestion')
+  await queryInterface.dropTable('questionnaires')
 }

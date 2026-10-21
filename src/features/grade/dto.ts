@@ -28,10 +28,3 @@ export interface GradeQueryFilterDto {
   name?: string
   level?: string
 }
-
-// Backwards compatibility aliases for RukunWarga
-export type RukunWargaDto = GradeDto
-export type RukunWargaDetailDto = GradeDetailDto
-export type CreateRukunWargaDto = any
-export type UpdateRukunWargaDto = any
-export type RukunWargaQueryFilterDto = any

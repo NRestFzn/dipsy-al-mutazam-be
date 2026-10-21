@@ -49,7 +49,7 @@ route.post(
     const data = await repository.add(values)
 
     const httpResponse = HttpResponse.created({
-      message: req.t.success.created,
+      message: req.t.student.created,
       data,
     })
 
@@ -65,7 +65,7 @@ route.get(
     const data = await repository.getAll(req)
 
     const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
+      message: req.t.student.retrieved,
       ...data,
     })
 
@@ -121,27 +121,7 @@ route.get(
     const data = await repository.getByNisn(querySchema.nisn)
 
     const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
-      data,
-    })
-
-    res.status(httpResponse.statusCode).json(httpResponse)
-  })
-)
-
-// Alias for /by-nik/:nik
-route.get(
-  '/by-nik/:nik',
-  authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
-  asyncHandler(async (req: Request, res: Response) => {
-    const params = req.getParams() as any
-    const nisn = params.nik || params.nisn
-    const querySchema = studentNisnQuerySchema.validateSync({ nisn })
-    const data = await repository.getByNisn(querySchema.nisn)
-
-    const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
+      message: req.t.student.retrieved,
       data,
     })
 
@@ -159,7 +139,7 @@ route.get(
     const data = await repository.getById(querySchema.id)
 
     const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
+      message: req.t.student.retrieved,
       data,
     })
 
@@ -177,7 +157,7 @@ route.delete(
     const data = await repository.delete(querySchema.id)
 
     const httpResponse = HttpResponse.deleted({
-      message: req.t.success.deleted,
+      message: req.t.student.deleted,
     })
 
     res.status(httpResponse.statusCode).json(httpResponse)
@@ -204,7 +184,7 @@ route.put(
     const data = await repository.update(querySchema.id, values)
 
     const httpResponse = HttpResponse.updated({
-      message: req.t.success.updated,
+      message: req.t.student.updated,
       data,
     })
 
@@ -230,4 +210,4 @@ route.put(
   })
 )
 
-export { route as StudentController, route as ResidentController }
+export { route as StudentController }

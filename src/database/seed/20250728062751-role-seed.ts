@@ -30,15 +30,24 @@ export async function up(
     for (let i = 0; i < data.length; i += 1) {
       const item = data[i]
 
-      formData.push({
-        ...item,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      const [existing]: any = await queryInterface.sequelize.query(
+        'SELECT id FROM `roles` WHERE id = :id LIMIT 1',
+        { replacements: { id: item.id } }
+      )
+
+      if (!existing || existing.length === 0) {
+        formData.push({
+          ...item,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+      }
     }
   }
 
-  await queryInterface.bulkInsert('roles', formData)
+  if (formData.length > 0) {
+    await queryInterface.bulkInsert('roles', formData)
+  }
 }
 
 export async function down(

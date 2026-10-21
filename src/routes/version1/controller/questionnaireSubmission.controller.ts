@@ -107,7 +107,6 @@ route.get(
 
 /**
  * GET /v1/questionnaire-submission/summary-grade/:QuestionnaireId
- * (Alias: /summary-rw/:QuestionnaireId)
  * Agregat hasil per Tingkat/Jenjang.
  * Hak Akses: Guru BK
  */
@@ -117,7 +116,7 @@ const handleSummaryGrade = asyncHandler(async (req: Request, res: Response) => {
     req.query
   )
 
-  const gradeId = query.GradeId || query.RukunWargaId
+  const gradeId = query.GradeId
   if (!gradeId) {
     throw new ErrorResponse.BadRequest('GradeId wajib diisi')
   }
@@ -146,16 +145,8 @@ route.get(
   handleSummaryGrade
 )
 
-route.get(
-  '/summary-rw/:QuestionnaireId',
-  authorization(),
-  permissionAccess([RoleId.gurubk]),
-  handleSummaryGrade
-)
-
 /**
  * GET /v1/questionnaire-submission/summary-class/:QuestionnaireId
- * (Alias: /summary-rt/:QuestionnaireId)
  * Agregat hasil per Kelas. Wali kelas otomatis difilter hanya untuk kelas binaannya.
  * Hak Akses: Guru BK, Wali Kelas
  */
@@ -166,8 +157,8 @@ const handleSummaryClass = asyncHandler(async (req: Request, res: Response) => {
     req.query
   )
 
-  let classId = query.ClassId || query.RukunTetanggaId
-  let gradeId = query.GradeId || query.RukunWargaId
+  let classId = query.ClassId
+  let gradeId = query.GradeId
 
   const isWaliKelas =
     user.RoleIds.includes(RoleId.walikelas) &&
@@ -223,16 +214,8 @@ route.get(
   handleSummaryClass
 )
 
-route.get(
-  '/summary-rt/:QuestionnaireId',
-  authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
-  handleSummaryClass
-)
-
 /**
  * GET /v1/questionnaire-submission/summary-student/:QuestionnaireId
- * (Alias: /summary-user/:QuestionnaireId)
  * Rincian hasil individual siswa (skor total, skor subskala SDQ, status).
  * Hak Akses: Guru BK, Wali Kelas
  */
@@ -296,13 +279,6 @@ const handleSummaryStudent = asyncHandler(
 
 route.get(
   '/summary-student/:QuestionnaireId',
-  authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
-  handleSummaryStudent
-)
-
-route.get(
-  '/summary-user/:QuestionnaireId',
   authorization(),
   permissionAccess([RoleId.gurubk, RoleId.walikelas]),
   handleSummaryStudent

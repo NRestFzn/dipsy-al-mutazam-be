@@ -86,12 +86,4 @@ export interface UpdateStudentProfileDto {
   confirmNewPassword?: string | null
 }
 
-// Aliases for backwards compatibility
-export type ResidentDto = StudentDto
-export type ResidentDetailDto = StudentDetailDto
-export type CreateResidentDto = CreateStudentDto
-export type UpdateResidentDto = UpdateStudentDto
-export type ResidentQueryFilterDto = StudentQueryFilterDto
-export type ResidentDetailQueryFilterDto = StudentDetailQueryFilterDto
-export type ResidentNikQueryDto = StudentNisnQueryDto
 export type UpdateProfileDto = UpdateStudentProfileDto

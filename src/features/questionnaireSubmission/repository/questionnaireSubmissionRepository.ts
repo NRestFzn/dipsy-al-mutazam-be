@@ -238,7 +238,7 @@ export class QuestionnaireSubmissionRepository {
     options: IGetSummaryOptionsByGrade
   ): Promise<ISummarizeByGradeIdDetailed> {
     const { startDate, endDate } = options
-    const gradeId = options.GradeId || options.RukunWargaId!
+    const gradeId = options.GradeId
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
@@ -406,7 +406,7 @@ export class QuestionnaireSubmissionRepository {
     options: IGetSummaryOptionsByClass
   ): Promise<ISummarizeByClassIdDetailed> {
     const { startDate, endDate } = options
-    const classId = options.ClassId || options.RukunTetanggaId!
+    const classId = options.ClassId
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId

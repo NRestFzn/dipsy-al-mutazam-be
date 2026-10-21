@@ -137,6 +137,3 @@ export class GradeRepository {
     await data.destroy()
   }
 }
-
-// Backwards compatibility alias
-export const RukunWargaRepository = GradeRepository

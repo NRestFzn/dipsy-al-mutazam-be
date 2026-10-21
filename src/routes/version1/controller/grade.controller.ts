@@ -28,7 +28,7 @@ route.post(
     const data = await repository.add(values)
 
     const httpResponse = HttpResponse.created({
-      message: req.t.success.created,
+      message: req.t.grade.created,
       data,
     })
 
@@ -42,7 +42,7 @@ route.get(
     const data = await repository.getAll(req)
 
     const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
+      message: req.t.grade.retrieved,
       ...data,
     })
 
@@ -60,7 +60,7 @@ route.get(
     const data = await repository.getById(querySchema.id)
 
     const httpResponse = HttpResponse.get({
-      message: req.t.success.retrieved,
+      message: req.t.grade.retrieved,
       data,
     })
 
@@ -80,7 +80,7 @@ route.delete(
     const data = await repository.delete(querySchema.id)
 
     const httpResponse = HttpResponse.deleted({
-      message: req.t.success.deleted,
+      message: req.t.grade.deleted,
     })
 
     res.status(httpResponse.statusCode).json(httpResponse)
@@ -103,7 +103,7 @@ route.put(
     const data = await repository.update(querySchema.id, values)
 
     const httpResponse = HttpResponse.updated({
-      message: req.t.success.updated,
+      message: req.t.grade.updated,
       data,
     })
 
@@ -111,4 +111,4 @@ route.put(
   })
 )
 
-export { route as GradeController, route as RukunWargaController }
+export { route as GradeController }

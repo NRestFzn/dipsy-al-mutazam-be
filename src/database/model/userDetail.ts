@@ -67,13 +67,4 @@ export default class UserDetail extends BaseSchema {
 
   @BelongsTo(() => Class)
   class: Class
-
-  // Backwards compatibility getters
-  get RukunWargaId(): string {
-    return this.GradeId
-  }
-
-  get RukunTetanggaId(): string {
-    return this.ClassId
-  }
 }

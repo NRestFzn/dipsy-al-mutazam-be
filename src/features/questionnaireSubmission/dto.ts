@@ -77,22 +77,15 @@ export interface IGetSummaryOptions {
 
 export interface IGetSummaryOptionsByGrade extends IGetSummaryOptions {
   GradeId: string
-  // Alias
-  RukunWargaId?: string
 }
-export type IGetSummaryOptionsByRw = IGetSummaryOptionsByGrade
 
 export interface IGetSummaryOptionsByClass extends IGetSummaryOptionsByGrade {
   ClassId: string
-  // Alias
-  RukunTetanggaId?: string
 }
-export type IGetSummaryOptionsByRt = IGetSummaryOptionsByClass
 
 export interface IGetSummaryOptionsByStudent extends IGetSummaryOptionsByClass {
   UserId: string
 }
-export type IGetSummaryOptionsByUser = IGetSummaryOptionsByStudent
 
 export interface ISummarizeStudentByClass {
   UserId: string

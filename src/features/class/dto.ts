@@ -35,10 +35,3 @@ export interface ClassQueryFilterDto {
   name?: string
   GradeId?: string
 }
-
-// Backwards compatibility aliases for RukunTetangga
-export type RukunTetanggaDto = ClassDto
-export type RukunTetanggaDetailDto = ClassDetailDto
-export type CreateRukunTetanggaDto = any
-export type UpdateRukunTetanggaDto = any
-export type RukunTetanggaQueryFilterDto = any

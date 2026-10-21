@@ -227,6 +227,3 @@ export class StudentRepository {
     await data.destroy()
   }
 }
-
-// Backwards compatibility alias
-export const ResidentRepository = StudentRepository

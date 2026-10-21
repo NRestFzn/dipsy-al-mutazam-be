@@ -7,7 +7,7 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('rukunTetangga', {
+  await queryInterface.createTable('questionnaire_categories', {
     id: {
       allowNull: false,
       primaryKey: true,
@@ -16,17 +16,8 @@ export async function up(
     },
     name: {
       allowNull: false,
-      type: Sequelize.INTEGER,
-    },
-    RukunWargaId: {
-      allowNull: false,
-      type: Sequelize.UUID,
-      references: {
-        model: 'rukunWarga',
-        key: 'id',
-      },
-      onDelete: 'cascade',
-      onUpdate: 'cascade',
+      unique: true,
+      type: Sequelize.STRING,
     },
     createdAt: {
       allowNull: false,
@@ -43,5 +34,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('rukunTetangga')
+  await queryInterface.dropTable('questionnaire_categories')
 }

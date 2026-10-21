@@ -2,20 +2,30 @@
 
 import { DataTypes, QueryInterface } from 'sequelize'
 
+/** @type {import('sequelize-cli').Migration} */
 export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('odgj_residents', {
+  await queryInterface.createTable('user_has_roles', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
+    RoleId: {
+      allowNull: false,
+      type: Sequelize.UUID,
+      references: {
+        model: 'roles',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
     UserId: {
       allowNull: false,
-      unique: true,
       type: Sequelize.UUID,
       references: {
         model: 'users',
@@ -23,10 +33,6 @@ export async function up(
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
-    },
-    notes: {
-      allowNull: true,
-      type: Sequelize.TEXT,
     },
     createdAt: {
       allowNull: false,
@@ -43,5 +49,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('odgj_residents')
+  await queryInterface.dropTable('user_has_roles')
 }

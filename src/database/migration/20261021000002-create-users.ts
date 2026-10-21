@@ -7,15 +7,28 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('marriageStatus', {
+  await queryInterface.createTable('users', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    name: {
+    fullname: {
       allowNull: false,
+      type: Sequelize.STRING,
+    },
+    email: {
+      allowNull: false,
+      unique: true,
+      type: Sequelize.STRING,
+    },
+    password: {
+      allowNull: true,
+      type: Sequelize.STRING,
+    },
+    profilePicture: {
+      allowNull: true,
       type: Sequelize.STRING,
     },
     createdAt: {
@@ -33,5 +46,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('marriageStatus')
+  await queryInterface.dropTable('users')
 }

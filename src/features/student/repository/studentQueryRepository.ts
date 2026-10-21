@@ -49,7 +49,7 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
 
     this.GradeId = query.GradeId || query.TingkatId
     this.ClassId = query.ClassId || query.KelasId
-    this.nisn = query.nisn || query.nik
+    this.nisn = query.nisn
   }
 
   public queryFilter(): FindOptions {
@@ -82,7 +82,3 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
     return findCondition
   }
 }
-
-// Backwards compatibility aliases
-export const ResidentQueryRepository = StudentQueryRepository
-export const ResidentDetailQueryRepository = StudentDetailQueryFilterRepository
