@@ -1,29 +1,29 @@
-import { MarriageStatusRepository } from '@/features/marriageStatus/repository/marriageStatusRepository'
+import { GradeRepository } from '@/features/grade/repository/gradeRepository'
 import { permissionAccess } from '@/middleware/permissionAccess'
 import authorization from '@/middleware/authorization'
 import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
-  MarriageStatusQuery,
-  marriageStatusQuerySchema,
-  marriageStatusSchema,
-} from '@/features/marriageStatus/schema'
+  GradeQuery,
+  createGradeSchema,
+  gradeQuerySchema,
+  updateGradeSchema,
+} from '@/features/grade/schema'
 import asyncHandler from '@/helper/asyncHandler'
 import { RoleId } from '@/libs/constant/roleIds'
-import _ from 'lodash'
 
-const repository = new MarriageStatusRepository()
+const repository = new GradeRepository()
 
 const route = express.Router()
 
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminMedis]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = marriageStatusSchema.validateSync(formData)
+    const values = createGradeSchema.validateSync(formData)
 
     const data = await repository.add(values)
 
@@ -32,7 +32,7 @@ route.post(
       data,
     })
 
-    res.status(201).json(httpResponse)
+    res.status(httpResponse.statusCode).json(httpResponse)
   })
 )
 
@@ -46,38 +46,36 @@ route.get(
       ...data,
     })
 
-    res.status(200).json(httpResponse)
+    res.status(httpResponse.statusCode).json(httpResponse)
   })
 )
 
 route.get(
   '/:id',
-  authorization(),
-  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: MarriageStatusQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = marriageStatusQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
-    const data = await repository.getByPk(querySchema.id)
+    const data = await repository.getById(querySchema.id)
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
       data,
     })
 
-    res.status(200).json(httpResponse)
+    res.status(httpResponse.statusCode).json(httpResponse)
   })
 )
 
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminMedis]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: MarriageStatusQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = marriageStatusQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
     const data = await repository.delete(querySchema.id)
 
@@ -85,22 +83,22 @@ route.delete(
       message: req.t.success.deleted,
     })
 
-    res.status(200).json(httpResponse)
+    res.status(httpResponse.statusCode).json(httpResponse)
   })
 )
 
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminMedis]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = marriageStatusSchema.validateSync(formData)
+    const values = updateGradeSchema.validateSync(formData)
 
-    const params: MarriageStatusQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = marriageStatusQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
     const data = await repository.update(querySchema.id, values)
 
@@ -109,8 +107,8 @@ route.put(
       data,
     })
 
-    res.status(200).json(httpResponse)
+    res.status(httpResponse.statusCode).json(httpResponse)
   })
 )
 
-export { route as MarriageStatusController }
+export { route as GradeController, route as RukunWargaController }

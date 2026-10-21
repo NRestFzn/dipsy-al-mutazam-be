@@ -53,7 +53,7 @@ export class StudentRepository {
         {
           model: Role,
           where: {
-            id: { [Op.in]: [RoleId.user] },
+            id: { [Op.in]: [RoleId.siswa] },
           },
           through: { attributes: [] },
         },
@@ -104,7 +104,7 @@ export class StudentRepository {
         {
           model: Role,
           where: {
-            id: { [Op.in]: [RoleId.user] },
+            id: { [Op.in]: [RoleId.siswa] },
           },
           through: { attributes: [] },
         },
@@ -165,7 +165,7 @@ export class StudentRepository {
 
       await UserHasRoles.create(
         {
-          RoleId: RoleId.user,
+          RoleId: RoleId.siswa,
           UserId: data.id,
         },
         { transaction }

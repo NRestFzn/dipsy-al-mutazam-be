@@ -2,7 +2,7 @@
 
 import { green } from 'colorette'
 import _ from 'lodash'
-import { DataTypes, QueryInterface, QueryTypes } from 'sequelize'
+import { DataTypes, QueryInterface } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 import { env } from '@/config/env.config'
 import Hashing from '@/config/hash.config'
@@ -21,27 +21,25 @@ export async function up(
 ) {
   const data = [
     {
-      fullname: 'Admin Medis',
-      email: 'admin.medis@example.com',
-      RoleIds: [RoleId.adminMedis],
+      fullname: 'Guru BK',
+      email: 'gurubk@al-multazam.sch.id',
+      RoleIds: [RoleId.gurubk],
       password: await hashing.hash(defaultPassword),
     },
     {
-      fullname: 'Admin Desa',
-      email: 'admin.desa@example.com',
-      RoleIds: [RoleId.adminDesa],
+      fullname: 'Wali Kelas',
+      email: 'walikelas@al-multazam.sch.id',
+      RoleIds: [RoleId.walikelas],
       password: await hashing.hash(defaultPassword),
     },
   ]
 
-  const formData = []
-
-  const userHasRolesFormData = []
+  const formData: any[] = []
+  const userHasRolesFormData: any[] = []
 
   if (!_.isEmpty(data)) {
     for (let i = 0; i < data.length; i += 1) {
       const item = data[i]
-
       const UserId = uuidv4()
 
       formData.push({

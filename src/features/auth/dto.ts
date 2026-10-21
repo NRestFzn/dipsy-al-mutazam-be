@@ -29,13 +29,8 @@ export interface RegisterDto {
 
   // Backwards compatibility optional fields
   nik?: string
-  profession?: string
   RukunWargaId?: string
   RukunTetanggaId?: string
-  MarriageStatusId?: string
-  EducationId?: string
-  SalaryRangeId?: string
-  isKader?: boolean
 }
 
 export interface AuthResponseDto {

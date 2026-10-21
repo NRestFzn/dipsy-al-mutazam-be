@@ -1,27 +1,34 @@
 import { Request } from 'express'
-import { MarriageStatusQueryFilterDto } from '../dto'
+import { GradeQueryFilterDto } from '../dto'
 import { FindOptions, WhereOptions, Op } from 'sequelize'
 import { BaseQueryRequest } from '@/routes/version1/request/_baseQueryRequest'
 
-export class MarriageStatusQueryRepository extends BaseQueryRequest {
+export class GradeQueryRepository extends BaseQueryRequest {
   public name?: string
+  public level?: string
 
   constructor(req: Request) {
     super(req)
 
-    const query = req.query as unknown as MarriageStatusQueryFilterDto
+    const query = req.query as unknown as GradeQueryFilterDto
 
     this.name = query.name
+    this.level = query.level
   }
 
   public queryFilter(): FindOptions {
-    const whereCondition: WhereOptions<MarriageStatusQueryFilterDto>[] = []
-
+    const whereCondition: WhereOptions<GradeQueryFilterDto>[] = []
     if (this.name) {
       whereCondition.push({
         name: {
           [Op.like]: `%${this.name}%`,
         },
+      })
+    }
+
+    if (this.level) {
+      whereCondition.push({
+        level: this.level,
       })
     }
 
@@ -37,3 +44,6 @@ export class MarriageStatusQueryRepository extends BaseQueryRequest {
     return findCondition
   }
 }
+
+// Backwards compatibility alias
+export const RukunWargaQueryRepository = GradeQueryRepository

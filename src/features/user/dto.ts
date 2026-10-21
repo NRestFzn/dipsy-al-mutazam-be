@@ -23,10 +23,6 @@ export interface UserDetailDto extends UserDto {
     birthDate?: Date
     RukunWargaId?: string
     RukunTetanggaId?: string
-    MarriageStatusId?: string
-    EducationId?: string
-    SalaryRangeId?: string
-    profession?: string
     nik?: string
   }
 }

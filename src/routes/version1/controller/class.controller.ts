@@ -1,29 +1,29 @@
-import { SalaryRangeRepository } from '@/features/salaryRange/repository/salaryRangeRepository'
+import { ClassRepository } from '@/features/class/repository/classRepository'
 import { permissionAccess } from '@/middleware/permissionAccess'
 import authorization from '@/middleware/authorization'
 import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
-  SalaryRangeQuery,
-  salaryRangeQuerySchema,
-  salaryRangeSchema,
-} from '@/features/salaryRange/schema'
+  ClassQuery,
+  createClassSchema,
+  classQuerySchema,
+  updateClassSchema,
+} from '@/features/class/schema'
 import asyncHandler from '@/helper/asyncHandler'
 import { RoleId } from '@/libs/constant/roleIds'
-import _ from 'lodash'
 
-const repository = new SalaryRangeRepository()
+const repository = new ClassRepository()
 
 const route = express.Router()
 
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = salaryRangeSchema.validateSync(formData)
+    const values = createClassSchema.validateSync(formData)
 
     const data = await repository.add(values)
 
@@ -52,14 +52,12 @@ route.get(
 
 route.get(
   '/:id',
-  authorization(),
-  permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: SalaryRangeQuery = req.getParams()
+    const params: ClassQuery = req.getParams()
 
-    const querySchema = salaryRangeQuerySchema.validateSync(params)
+    const querySchema = classQuerySchema.validateSync(params)
 
-    const data = await repository.getByPk(querySchema.id)
+    const data = await repository.getById(querySchema.id)
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
@@ -73,11 +71,11 @@ route.get(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: SalaryRangeQuery = req.getParams()
+    const params: ClassQuery = req.getParams()
 
-    const querySchema = salaryRangeQuerySchema.validateSync(params)
+    const querySchema = classQuerySchema.validateSync(params)
 
     const data = await repository.delete(querySchema.id)
 
@@ -92,15 +90,15 @@ route.delete(
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = salaryRangeSchema.validateSync(formData)
+    const values = updateClassSchema.validateSync(formData)
 
-    const params: SalaryRangeQuery = req.getParams()
+    const params: ClassQuery = req.getParams()
 
-    const querySchema = salaryRangeQuerySchema.validateSync(params)
+    const querySchema = classQuerySchema.validateSync(params)
 
     const data = await repository.update(querySchema.id, values)
 
@@ -113,4 +111,4 @@ route.put(
   })
 )
 
-export { route as SalaryRangeController }
+export { route as ClassController, route as RukunTetanggaController }

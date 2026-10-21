@@ -9,31 +9,57 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  const formData: any[] = []
-
-  const rukunWarga: { id: string }[] = await queryInterface.sequelize.query(
-    'SELECT id FROM `rukun_wargas` ORDER BY name ASC',
-    { type: QueryTypes.SELECT }
+  const [tables]: any = await queryInterface.sequelize.query(
+    "SHOW TABLES LIKE 'classes'"
   )
 
-  for (const rw of rukunWarga) {
-    for (let i = 1; i <= 20; i++) {
+  const isSchoolMode = tables && tables.length > 0
+  const tableName = isSchoolMode ? 'classes' : 'rukun_tetanggas'
+  const parentTable = isSchoolMode ? 'grades' : 'rukun_wargas'
+  const foreignKey = isSchoolMode ? 'GradeId' : 'RukunWargaId'
+
+  const [existing]: any = await queryInterface.sequelize.query(
+    `SELECT id FROM \`${tableName}\` LIMIT 1`
+  )
+
+  if (existing && existing.length > 0) {
+    return
+  }
+
+  const formData: any[] = []
+
+  const parents: { id: string; name: string }[] =
+    await queryInterface.sequelize.query(
+      `SELECT id, name FROM \`${parentTable}\` ORDER BY name ASC`,
+      { type: QueryTypes.SELECT }
+    )
+
+  for (const parent of parents) {
+    const suffixes = isSchoolMode ? ['A', 'B'] : Array.from({ length: 20 }, (_, i) => String(i + 1))
+    for (const suffix of suffixes) {
+      const name = isSchoolMode ? `${parent.name}-${suffix}` : suffix
       formData.push({
         id: v4(),
-        name: i,
-        RukunWargaId: rw.id,
+        name,
+        [foreignKey]: parent.id,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
     }
   }
 
-  await queryInterface.bulkInsert('rukun_tetanggas', formData)
+  if (formData.length > 0) {
+    await queryInterface.bulkInsert(tableName, formData)
+  }
 }
 
 export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.bulkDelete('rukun_tetanggas', {})
+  const [tables]: any = await queryInterface.sequelize.query(
+    "SHOW TABLES LIKE 'classes'"
+  )
+  const tableName = tables && tables.length > 0 ? 'classes' : 'rukun_tetanggas'
+  await queryInterface.bulkDelete(tableName, {})
 }
