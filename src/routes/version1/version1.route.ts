@@ -9,7 +9,7 @@ import { SalaryRangeController } from './controller/salaryRange.controller'
 import { QuestionnaireController } from './controller/questionnaire.controller'
 import { QuestionnaireQuestionController } from './controller/questionnaireQuestion.controller'
 import { QuestionnaireSubmissionController } from './controller/questionnaireSubmission.controller'
-import { ResidentController } from './controller/resident.controller'
+import { StudentController } from './controller/student.controller'
 import { UserController } from './controller/user.controller'
 import { QuestionnaireCategoryController } from './controller/questionnaireCategory.controller'
 import { FamilyController } from './controller/family.controller'
@@ -27,7 +27,8 @@ Route.use('/salary-range', SalaryRangeController)
 Route.use('/questionnaire', QuestionnaireController)
 Route.use('/questionnaire-question', QuestionnaireQuestionController)
 Route.use('/questionnaire-submission', QuestionnaireSubmissionController)
-Route.use('/resident', ResidentController)
+Route.use('/student', StudentController)
+Route.use('/resident', StudentController)
 Route.use('/user', UserController)
 Route.use('/questionnaire-category', QuestionnaireCategoryController)
 Route.use('/family', FamilyController)
