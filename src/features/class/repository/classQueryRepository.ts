@@ -45,6 +45,3 @@ export class ClassQueryRepository extends BaseQueryRequest {
     return findCondition
   }
 }
-
-// Backwards compatibility alias
-export const RukunTetanggaQueryRepository = ClassQueryRepository

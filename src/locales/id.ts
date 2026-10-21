@@ -101,7 +101,6 @@ const id: Translation = {
 
   attributes: {
     fullname: 'Nama Lengkap',
-    nik: 'Nomor Induk Siswa Nasional (NISN)',
     nisn: 'Nomor Induk Siswa Nasional (NISN)',
     nis: 'Nomor Induk Siswa (NIS)',
     entryYear: 'Tahun Masuk',
@@ -110,8 +109,6 @@ const id: Translation = {
     ClassId: 'Kelas',
     TingkatId: 'Tingkat',
     KelasId: 'Kelas',
-    RukunWargaId: 'Tingkat',
-    RukunTetanggaId: 'Kelas',
     email: 'Alamat Email',
     phoneNumber: 'Nomor Telepon',
     password: 'Kata Sandi',

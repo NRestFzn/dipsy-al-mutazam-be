@@ -4,7 +4,6 @@ import { AuthRepository } from '@/features/auth/repository/authRepository'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
   loginSchema,
-  loginWithNikSchema,
   loginWithNisnSchema,
   registerSchema,
 } from '@/features/auth/schema'
@@ -64,29 +63,6 @@ route.post(
     const values = loginWithNisnSchema.validateSync(formData)
 
     const data = await repository.loginWithNisn(values)
-
-    const httpResponse = HttpResponse.get({
-      message: req.t.auth.loginSuccess,
-      data,
-    })
-
-    res.status(200).json(httpResponse)
-  })
-)
-
-// Backwards compatibility alias for /signin/resident
-route.post(
-  '/signin/resident',
-  asyncHandler(async (req: Request, res: Response) => {
-    const formData = req.getBody()
-
-    const values = loginWithNikSchema.validateSync(formData)
-
-    const nisn = values.nisn || values.nik
-    const data = await repository.loginWithNisn({
-      nisn: nisn as string,
-      password: values.password,
-    })
 
     const httpResponse = HttpResponse.get({
       message: req.t.auth.loginSuccess,

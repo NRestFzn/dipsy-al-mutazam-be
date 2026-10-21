@@ -175,6 +175,3 @@ export class ClassRepository {
     await data.destroy()
   }
 }
-
-// Backwards compatibility alias
-export const RukunTetanggaRepository = ClassRepository

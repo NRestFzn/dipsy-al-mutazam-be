@@ -111,4 +111,4 @@ route.put(
   })
 )
 
-export { route as ClassController, route as RukunTetanggaController }
+export { route as ClassController }

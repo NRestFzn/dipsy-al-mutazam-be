@@ -114,13 +114,3 @@ export type StudentQuery = yup.InferType<typeof studentQuerySchema>
 export type StudentNisnQuery = yup.InferType<typeof studentNisnQuerySchema>
 export type CreateStudent = yup.InferType<typeof createStudentSchema>
 export type UpdateStudent = yup.InferType<typeof updateStudentSchema>
-
-// Backwards compatibility aliases
-export const createResidentSchema = createStudentSchema
-export const updateResidentSchema = updateStudentSchema
-export const residentQuerySchema = studentQuerySchema
-export const residentNikQuerySchema = studentNisnQuerySchema
-export type ResidentQuery = StudentQuery
-export type ResidentNikQuery = StudentNisnQuery
-export type CreateResident = CreateStudent
-export type UpdateResident = UpdateStudent

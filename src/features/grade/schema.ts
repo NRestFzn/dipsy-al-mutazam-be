@@ -25,9 +25,3 @@ export const gradeQuerySchema = yup.object().shape({
 export type GradeQuery = yup.InferType<typeof gradeQuerySchema>
 export type CreateGrade = yup.InferType<typeof createGradeSchema>
 export type UpdateGrade = yup.InferType<typeof updateGradeSchema>
-
-// Backwards compatibility aliases
-export const createRukunWargaSchema = createGradeSchema
-export const updateRukunWargaSchema = updateGradeSchema
-export const rukunWargaQuerySchema = gradeQuerySchema
-export type RukunWargaQuery = GradeQuery

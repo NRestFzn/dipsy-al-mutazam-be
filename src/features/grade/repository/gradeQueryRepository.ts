@@ -44,6 +44,3 @@ export class GradeQueryRepository extends BaseQueryRequest {
     return findCondition
   }
 }
-
-// Backwards compatibility alias
-export const RukunWargaQueryRepository = GradeQueryRepository

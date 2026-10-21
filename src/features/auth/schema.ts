@@ -21,15 +21,6 @@ export const loginWithNisnSchema = yup.object({
     .required('validation.required'),
 })
 
-export const loginWithNikSchema = yup.object({
-  nik: yup.string().optional().nullable(),
-  nisn: yup.string().optional().nullable(),
-  password: yup
-    .string()
-    .min(8, 'validation.min')
-    .required('validation.required'),
-})
-
 export const registerSchema = yup.object({
   fullname: yup.string().required('validation.required'),
   nisn: yup

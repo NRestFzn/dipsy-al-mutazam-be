@@ -40,6 +40,16 @@ export async function up(
   if (!_.isEmpty(data)) {
     for (let i = 0; i < data.length; i += 1) {
       const item = data[i]
+
+      const [existing]: any = await queryInterface.sequelize.query(
+        'SELECT id FROM `users` WHERE email = :email LIMIT 1',
+        { replacements: { email: item.email } }
+      )
+
+      if (existing && existing.length > 0) {
+        continue
+      }
+
       const UserId = uuidv4()
 
       formData.push({
@@ -63,8 +73,12 @@ export async function up(
     }
   }
 
-  await queryInterface.bulkInsert('users', formData)
-  await queryInterface.bulkInsert('user_has_roles', userHasRolesFormData)
+  if (formData.length > 0) {
+    await queryInterface.bulkInsert('users', formData)
+  }
+  if (userHasRolesFormData.length > 0) {
+    await queryInterface.bulkInsert('user_has_roles', userHasRolesFormData)
+  }
 }
 
 export async function down(

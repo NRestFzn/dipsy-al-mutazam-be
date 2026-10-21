@@ -129,26 +129,6 @@ route.get(
   })
 )
 
-// Alias for /by-nik/:nik
-route.get(
-  '/by-nik/:nik',
-  authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
-  asyncHandler(async (req: Request, res: Response) => {
-    const params = req.getParams() as any
-    const nisn = params.nik || params.nisn
-    const querySchema = studentNisnQuerySchema.validateSync({ nisn })
-    const data = await repository.getByNisn(querySchema.nisn)
-
-    const httpResponse = HttpResponse.get({
-      message: req.t.student.retrieved,
-      data,
-    })
-
-    res.status(httpResponse.statusCode).json(httpResponse)
-  })
-)
-
 route.get(
   '/:id',
   authorization(),
@@ -230,4 +210,4 @@ route.put(
   })
 )
 
-export { route as StudentController, route as ResidentController }
+export { route as StudentController }

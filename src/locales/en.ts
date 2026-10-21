@@ -95,7 +95,6 @@ export default {
 
   attributes: {
     fullname: 'Full Name',
-    nik: 'NISN',
     nisn: 'NISN',
     nis: 'NIS',
     entryYear: 'Entry Year',
@@ -104,8 +103,6 @@ export default {
     ClassId: 'Class',
     TingkatId: 'Grade',
     KelasId: 'Class',
-    RukunWargaId: 'Grade',
-    RukunTetanggaId: 'Class',
     email: 'Email Address',
     phoneNumber: 'Phone Number',
     password: 'Password',

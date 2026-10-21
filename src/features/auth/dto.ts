@@ -8,8 +8,6 @@ export interface LoginWithNisnDto {
   password: string
 }
 
-export type LoginWithNikDto = LoginWithNisnDto
-
 export interface RegisterDto {
   fullname: string
   nisn: string
@@ -26,11 +24,6 @@ export interface RegisterDto {
   nis?: string | null
   entryYear?: string | null
   academicYear?: string | null
-
-  // Backwards compatibility optional fields
-  nik?: string
-  RukunWargaId?: string
-  RukunTetanggaId?: string
 }
 
 export interface AuthResponseDto {

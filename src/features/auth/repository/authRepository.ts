@@ -6,7 +6,6 @@ import { env } from '@/config/env.config'
 import {
   AuthResponseDto,
   LoginDto,
-  LoginWithNikDto,
   LoginWithNisnDto,
   RegisterDto,
 } from '../dto'
@@ -20,10 +19,6 @@ const jwt = new JwtToken({ secret: env.JWT_SECRET, expires: env.JWT_EXPIRES })
 export class AuthRepository {
   public createEmailFromNisn(nisn: string): string {
     return `${nisn}@al-multazam.sch.id`
-  }
-
-  public createEmailFromFullnameAndNik(fullname: string, nik: string): string {
-    return `${nik}@al-multazam.sch.id`
   }
 
   async login(formData: LoginDto): Promise<AuthResponseDto> {
@@ -83,7 +78,7 @@ export class AuthRepository {
   }
 
   async loginWithNisn(formData: LoginWithNisnDto): Promise<AuthResponseDto> {
-    const nisn = formData.nisn || (formData as any).nik
+    const nisn = formData.nisn
     const getUser = await UserDetail.findOne({
       where: { nisn },
       include: [
@@ -136,12 +131,8 @@ export class AuthRepository {
     }
   }
 
-  async loginWithNik(formData: LoginWithNikDto): Promise<AuthResponseDto> {
-    return this.loginWithNisn(formData)
-  }
-
   async register(formData: RegisterDto): Promise<AuthResponseDto> {
-    const nisn = formData.nisn || (formData as any).nik
+    const nisn = formData.nisn
     const GradeId = formData.GradeId || formData.TingkatId
     const ClassId = formData.ClassId || formData.KelasId
 

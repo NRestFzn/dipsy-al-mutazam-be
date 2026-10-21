@@ -21,9 +21,6 @@ export interface UserDetailDto extends UserDto {
     phoneNumber?: string
     gender?: string
     birthDate?: Date
-    RukunWargaId?: string
-    RukunTetanggaId?: string
-    nik?: string
   }
 }
 

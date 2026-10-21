@@ -21,9 +21,3 @@ export const classQuerySchema = yup.object().shape({
 export type ClassQuery = yup.InferType<typeof classQuerySchema>
 export type CreateClass = yup.InferType<typeof createClassSchema>
 export type UpdateClass = yup.InferType<typeof updateClassSchema>
-
-// Backwards compatibility aliases
-export const createRukunTetanggaSchema = createClassSchema
-export const updateRukunTetanggaSchema = updateClassSchema
-export const rukunTetanggaQuerySchema = classQuerySchema
-export type RukunTetanggaQuery = ClassQuery

@@ -111,4 +111,4 @@ route.put(
   })
 )
 
-export { route as GradeController, route as RukunWargaController }
+export { route as GradeController }
