@@ -7,41 +7,36 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('user', {
+  await queryInterface.createTable('classes', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    fullname: {
+    name: {
       allowNull: false,
       type: Sequelize.STRING,
     },
-    email: {
-      unique: true,
-      allowNull: false,
-      type: Sequelize.STRING,
-    },
-    password: {
-      allowNull: false,
-      type: Sequelize.STRING,
-    },
-    RoleId: {
+    GradeId: {
       allowNull: false,
       type: Sequelize.UUID,
       references: {
-        model: 'role',
+        model: 'grades',
         key: 'id',
       },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
     },
-    gender: {
-      allowNull: false,
-      type: Sequelize.ENUM('m', 'f'),
-    },
-    birthDate: {
-      allowNull: false,
-      type: Sequelize.DATEONLY,
+    homeroomTeacherId: {
+      allowNull: true,
+      type: Sequelize.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
     createdAt: {
       allowNull: false,
@@ -58,5 +53,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('user')
+  await queryInterface.dropTable('classes')
 }

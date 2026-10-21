@@ -7,20 +7,32 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('salaryRange', {
+  await queryInterface.createTable('user_has_roles', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    minRange: {
+    RoleId: {
       allowNull: false,
-      type: Sequelize.DECIMAL(12, 2),
+      type: Sequelize.UUID,
+      references: {
+        model: 'roles',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
     },
-    maxRange: {
+    UserId: {
       allowNull: false,
-      type: Sequelize.DECIMAL(12, 2),
+      type: Sequelize.UUID,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
     },
     createdAt: {
       allowNull: false,
@@ -37,5 +49,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('salaryRange')
+  await queryInterface.dropTable('user_has_roles')
 }

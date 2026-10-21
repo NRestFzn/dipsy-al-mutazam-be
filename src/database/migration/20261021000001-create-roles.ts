@@ -7,7 +7,7 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('education', {
+  await queryInterface.createTable('roles', {
     id: {
       allowNull: false,
       primaryKey: true,
@@ -33,5 +33,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('education')
+  await queryInterface.dropTable('roles')
 }

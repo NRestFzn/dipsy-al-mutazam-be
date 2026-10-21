@@ -7,32 +7,17 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('user_has_roles', {
+  await queryInterface.createTable('questionnaire_categories', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    UserId: {
+    name: {
       allowNull: false,
-      type: Sequelize.UUID,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
-      onUpdate: 'cascade',
-      onDelete: 'cascade',
-    },
-    RoleId: {
-      allowNull: false,
-      type: Sequelize.UUID,
-      references: {
-        model: 'roles',
-        key: 'id',
-      },
-      onUpdate: 'cascade',
-      onDelete: 'cascade',
+      unique: true,
+      type: Sequelize.STRING,
     },
     createdAt: {
       allowNull: false,
@@ -49,5 +34,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('user_has_roles')
+  await queryInterface.dropTable('questionnaire_categories')
 }

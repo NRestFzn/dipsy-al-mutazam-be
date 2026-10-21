@@ -7,38 +7,44 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.createTable('questionnaireQuestion', {
+  await queryInterface.createTable('questionnaire_answers', {
     id: {
       allowNull: false,
       primaryKey: true,
       type: Sequelize.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    questionText: {
+    answerValue: {
       allowNull: false,
       type: Sequelize.STRING,
     },
-    questionType: {
-      allowNull: false,
+    answerLabel: {
+      allowNull: true,
       type: Sequelize.STRING,
     },
-    order: {
-      allowNull: false,
+    score: {
+      allowNull: true,
       type: Sequelize.INTEGER,
     },
-    status: {
-      allowNull: false,
-      type: Sequelize.ENUM('draft', 'publish'),
-    },
-    QuestionnaireId: {
+    QuestionnaireQuestionId: {
       allowNull: false,
       type: Sequelize.UUID,
       references: {
-        model: 'questionnaire',
+        model: 'questionnaire_questions',
         key: 'id',
       },
-      onUpdate: 'cascade',
-      onDelete: 'cascade',
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+    QuestionnaireSubmissionId: {
+      allowNull: false,
+      type: Sequelize.UUID,
+      references: {
+        model: 'questionnaire_submissions',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
     },
     createdAt: {
       allowNull: false,
@@ -55,5 +61,5 @@ export async function down(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
-  await queryInterface.dropTable('questionnaireQuestion')
+  await queryInterface.dropTable('questionnaire_answers')
 }
