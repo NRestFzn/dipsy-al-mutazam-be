@@ -49,6 +49,16 @@ export class AuthRepository {
 
       const RoleIds = getUser.roles.map((role) => role.id)
 
+      const isStaff = RoleIds.some((id) =>
+        [RoleId.gurubk, RoleId.walikelas].includes(id)
+      )
+
+      if (!isStaff) {
+        throw new ErrorResponse.Forbidden(
+          'Akun siswa harus login menggunakan NISN melalui halaman login siswa'
+        )
+      }
+
       const payload = JSON.parse(
         JSON.stringify({
           uid: getUser.id,
@@ -76,24 +86,54 @@ export class AuthRepository {
     const nisn = formData.nisn || (formData as any).nik
     const getUser = await UserDetail.findOne({
       where: { nisn },
-      include: [{ model: User.scope('withPassword') }],
+      include: [
+        {
+          model: User.scope('withPassword'),
+          include: [{ model: Role }],
+        },
+      ],
     })
 
-    if (!getUser) throw new ErrorResponse.NotFound('auth.loginNisnFailed')
+    if (!getUser || !getUser.user) {
+      throw new ErrorResponse.NotFound('auth.loginNisnFailed')
+    }
 
     const isPasswordMatch = await getUser.user.comparePassword(
       formData.password
     )
 
-    if (!isPasswordMatch)
+    if (!isPasswordMatch) {
       throw new ErrorResponse.BadRequest('auth.loginNisnFailed')
+    }
 
-    const data = await this.login({
+    const userRoleIds = getUser.user.roles
+      ? getUser.user.roles.map((r) => r.id)
+      : []
+
+    if (userRoleIds.length > 0 && !userRoleIds.includes(RoleId.siswa)) {
+      throw new ErrorResponse.Forbidden('errors.forbidden')
+    }
+
+    const RoleIds = [RoleId.siswa]
+
+    const payload = JSON.parse(
+      JSON.stringify({
+        uid: getUser.user.id,
+        RoleIds,
+      })
+    )
+
+    const { token, expiresIn } = jwt.generate(payload)
+
+    return {
+      fullname: getUser.user.fullname,
       email: getUser.user.email,
-      password: formData.password,
-    })
-
-    return data
+      RoleIds,
+      uid: getUser.user.id,
+      accessToken: token,
+      expiresAt: new Date(Date.now() + expiresIn * 1000),
+      expiresIn: expiresIn,
+    }
   }
 
   async loginWithNik(formData: LoginWithNikDto): Promise<AuthResponseDto> {
@@ -145,7 +185,7 @@ export class AuthRepository {
       await UserHasRoles.create(
         {
           UserId: user.id,
-          RoleId: RoleId.user,
+          RoleId: RoleId.siswa,
         },
         { transaction }
       )
