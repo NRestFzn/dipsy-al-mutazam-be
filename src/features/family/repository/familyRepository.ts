@@ -62,12 +62,12 @@ export class FamilyRepository {
       )
 
       const roleExists = await UserHasRoles.findOne({
-        where: { UserId: data.headOfFamilyId, RoleId: RoleId.kepalaKeluarga },
+        where: { UserId: data.headOfFamilyId, RoleId: RoleId.gurubk },
         transaction,
       })
       if (!roleExists) {
         await UserHasRoles.create(
-          { UserId: data.headOfFamilyId, RoleId: RoleId.kepalaKeluarga },
+          { UserId: data.headOfFamilyId, RoleId: RoleId.gurubk },
           { transaction }
         )
       }
@@ -102,18 +102,18 @@ export class FamilyRepository {
 
       if (oldHeadId) {
         await UserHasRoles.destroy({
-          where: { UserId: oldHeadId, RoleId: RoleId.kepalaKeluarga },
+          where: { UserId: oldHeadId, RoleId: RoleId.gurubk },
           transaction,
         })
       }
 
       const roleExists = await UserHasRoles.findOne({
-        where: { UserId: newHeadId, RoleId: RoleId.kepalaKeluarga },
+        where: { UserId: newHeadId, RoleId: RoleId.gurubk },
         transaction,
       })
       if (!roleExists) {
         await UserHasRoles.create(
-          { UserId: newHeadId, RoleId: RoleId.kepalaKeluarga },
+          { UserId: newHeadId, RoleId: RoleId.gurubk },
           { transaction }
         )
       }
@@ -179,7 +179,7 @@ export class FamilyRepository {
       newUserId = user.id
 
       await UserHasRoles.create(
-        { UserId: user.id, RoleId: RoleId.user },
+        { UserId: user.id, RoleId: RoleId.siswa },
         { transaction }
       )
 

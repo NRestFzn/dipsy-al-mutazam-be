@@ -6,24 +6,16 @@ import { RoleId } from '@/libs/constant/roleIds'
 
 const data = [
   {
-    id: RoleId.adminDesa,
-    name: 'admin desa',
+    id: RoleId.siswa,
+    name: 'siswa',
   },
   {
-    id: RoleId.adminMedis,
-    name: 'admin medis',
+    id: RoleId.gurubk,
+    name: 'gurubk',
   },
   {
-    id: RoleId.user,
-    name: 'user',
-  },
-  {
-    id: RoleId.kaderDesa,
-    name: 'kader desa',
-  },
-  {
-    id: RoleId.kepalaKeluarga,
-    name: 'kepala keluarga',
+    id: RoleId.walikelas,
+    name: 'walikelas',
   },
 ]
 
