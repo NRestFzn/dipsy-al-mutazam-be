@@ -3,27 +3,26 @@ export interface LoginDto {
   password: string
 }
 
-export interface LoginWithNisnDto {
-  nisn: string
+export interface LoginWithNikDto {
+  nik: string
   password: string
 }
 
 export interface RegisterDto {
   fullname: string
-  nisn: string
-  GradeId: string
-  ClassId: string
-  TingkatId?: string
-  KelasId?: string
-  birthDate: Date
-  gender: string
-  password: string
-  confirmPassword: string
+  nik: string
   email?: string | null
   phoneNumber?: string | null
-  nis?: string | null
-  entryYear?: string | null
-  academicYear?: string | null
+  password: string
+  confirmPassword: string
+  profession: string
+  birthDate: Date
+  RukunWargaId: string
+  RukunTetanggaId: string
+  MarriageStatusId: string
+  EducationId: string
+  SalaryRangeId: string
+  isKader?: boolean
 }
 
 export interface AuthResponseDto {

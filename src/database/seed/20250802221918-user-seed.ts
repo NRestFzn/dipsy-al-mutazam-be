@@ -2,7 +2,7 @@
 
 import { green } from 'colorette'
 import _ from 'lodash'
-import { DataTypes, QueryInterface } from 'sequelize'
+import { DataTypes, QueryInterface, QueryTypes } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 import { env } from '@/config/env.config'
 import Hashing from '@/config/hash.config'
@@ -21,34 +21,26 @@ export async function up(
 ) {
   const data = [
     {
-      fullname: 'Guru BK',
-      email: 'gurubk@al-multazam.sch.id',
-      RoleIds: [RoleId.gurubk],
+      fullname: 'Admin Medis',
+      email: 'admin.medis@example.com',
+      RoleIds: [RoleId.adminMedis],
       password: await hashing.hash(defaultPassword),
     },
     {
-      fullname: 'Wali Kelas',
-      email: 'walikelas@al-multazam.sch.id',
-      RoleIds: [RoleId.walikelas],
+      fullname: 'Admin Desa',
+      email: 'admin.desa@example.com',
+      RoleIds: [RoleId.adminDesa],
       password: await hashing.hash(defaultPassword),
     },
   ]
 
-  const formData: any[] = []
-  const userHasRolesFormData: any[] = []
+  const formData = []
+
+  const userHasRolesFormData = []
 
   if (!_.isEmpty(data)) {
     for (let i = 0; i < data.length; i += 1) {
       const item = data[i]
-
-      const [existing]: any = await queryInterface.sequelize.query(
-        'SELECT id FROM `users` WHERE email = :email LIMIT 1',
-        { replacements: { email: item.email } }
-      )
-
-      if (existing && existing.length > 0) {
-        continue
-      }
 
       const UserId = uuidv4()
 
@@ -73,12 +65,8 @@ export async function up(
     }
   }
 
-  if (formData.length > 0) {
-    await queryInterface.bulkInsert('users', formData)
-  }
-  if (userHasRolesFormData.length > 0) {
-    await queryInterface.bulkInsert('user_has_roles', userHasRolesFormData)
-  }
+  await queryInterface.bulkInsert('users', formData)
+  await queryInterface.bulkInsert('user_has_roles', userHasRolesFormData)
 }
 
 export async function down(

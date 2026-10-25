@@ -49,25 +49,16 @@ export interface ISummarize {
   unStableMentalPercentage: number
 }
 
-export interface ISummarizePerGrade extends ISummarize {
-  gradeId: string
-  gradeName: string
-  classCount: number
-  // Aliases for backward compatibility
-  rwId?: string
-  rwName?: string
-  rtCount?: number
+export interface ISummarizePerRw extends ISummarize {
+  rwId: string
+  rwName: string
+  rtCount: number
 }
-export type ISummarizePerRw = ISummarizePerGrade
 
-export interface ISummarizeByGradeId extends ISummarize {
-  classId: string
-  className: string
-  // Aliases for backward compatibility
-  rtId?: string
-  rtName?: string
+export interface ISummarizeByRwId extends ISummarize {
+  rtId: string
+  rtName: string
 }
-export type ISummarizeByRwId = ISummarizeByGradeId
 
 export interface IGetSummaryOptions {
   QuestionnaireId: string
@@ -75,29 +66,24 @@ export interface IGetSummaryOptions {
   endDate?: Date
 }
 
-export interface IGetSummaryOptionsByGrade extends IGetSummaryOptions {
-  GradeId: string
+export interface IGetSummaryOptionsByRw extends IGetSummaryOptions {
+  RukunWargaId: string
 }
 
-export interface IGetSummaryOptionsByClass extends IGetSummaryOptionsByGrade {
-  ClassId: string
+export interface IGetSummaryOptionsByRt extends IGetSummaryOptionsByRw {
+  RukunTetanggaId: string
 }
 
-export interface IGetSummaryOptionsByStudent extends IGetSummaryOptionsByClass {
+export interface IGetSummaryOptionsByUser extends IGetSummaryOptionsByRt {
   UserId: string
 }
 
-export interface ISummarizeStudentByClass {
-  UserId: string
+export interface ISummarizeUserByRt {
+  UserId: number
   fullname: string
-  nisn?: string | null
   lastSubmissionDate: Date | null
   isMentalUnStable: boolean | null
-  score?: number | null
-  resultKey?: string | null
-  resultLabel?: string | null
 }
-export type ISummarizeUserByRt = ISummarizeStudentByClass
 
 export interface ISummarizeSubmissionByUser {
   submissionId: string
@@ -106,39 +92,38 @@ export interface ISummarizeSubmissionByUser {
   resultKey: string
   resultLabel: string
   isMentalUnStable: boolean
-  scoringResult?: QuestionnaireScoringResult | null
 }
 
 export interface ISummarizeByQuestionnaireIdDetailed {
   summarize: ISummarize
-  perGrade: ISummarizePerGrade[]
-  perRw: ISummarizePerGrade[]
+  perRw: (ISummarize & ISummarizePerRw)[]
 }
 
-export interface ISummarizeByGradeIdDetailed {
+export interface ISummarizeByRwIdDetailed {
   summarize: ISummarize
-  perClass: ISummarizeByGradeId[]
-  perRt: ISummarizeByGradeId[]
+  perRt: (ISummarize & ISummarizeByRwId)[]
 }
-export type ISummarizeByRwIdDetailed = ISummarizeByGradeIdDetailed
 
-export interface ISummarizeByClassIdDetailed {
+export interface ISummarizeByRtIdDetailed {
   summarize: ISummarize
-  students: ISummarizeStudentByClass[]
-  users: ISummarizeStudentByClass[]
+  users: ISummarizeUserByRt[]
 }
-export type ISummarizeByRtIdDetailed = ISummarizeByClassIdDetailed
 
-export interface ISummarizeByStudentIdDetailed {
+export interface ISummarizeByUserIdDetailed {
   UserId: string
   fullname: string
-  nisn?: string | null
-  gradeName?: string | null
-  className?: string | null
   summarize: Omit<ISummarize, 'userCount'>
   submissions: ISummarizeSubmissionByUser[]
 }
-export type ISummarizeByUserIdDetailed = ISummarizeByStudentIdDetailed
+
+interface IQuestionnaireAnswer {
+  id: string
+  QuestionnaireSubmissionId: string
+  QuestionnaireQuestionId: string
+  answerValue: string
+  answerLabel: string | null
+  score: number | null
+}
 
 export interface ISummarizeSubmission extends QuestionnaireSubmissionDetailDto {
   trueCount: number

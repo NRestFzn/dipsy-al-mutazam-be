@@ -8,7 +8,7 @@ export const langHandler = (
   next: NextFunction
 ) => {
   const headerLang =
-    req.headers['x-lang'] || req.headers['accept-language'] || env.APP_LANG || defaultLang
+    env.APP_LANG || req.headers['x-lang'] || req.headers['accept-language']
 
   const langCode = (
     Array.isArray(headerLang) ? headerLang[0] : headerLang

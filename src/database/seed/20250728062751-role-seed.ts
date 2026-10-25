@@ -6,16 +6,24 @@ import { RoleId } from '@/libs/constant/roleIds'
 
 const data = [
   {
-    id: RoleId.siswa,
-    name: 'siswa',
+    id: RoleId.adminDesa,
+    name: 'admin desa',
   },
   {
-    id: RoleId.gurubk,
-    name: 'gurubk',
+    id: RoleId.adminMedis,
+    name: 'admin medis',
   },
   {
-    id: RoleId.walikelas,
-    name: 'walikelas',
+    id: RoleId.user,
+    name: 'user',
+  },
+  {
+    id: RoleId.kaderDesa,
+    name: 'kader desa',
+  },
+  {
+    id: RoleId.kepalaKeluarga,
+    name: 'kepala keluarga',
   },
 ]
 
@@ -30,24 +38,15 @@ export async function up(
     for (let i = 0; i < data.length; i += 1) {
       const item = data[i]
 
-      const [existing]: any = await queryInterface.sequelize.query(
-        'SELECT id FROM `roles` WHERE id = :id LIMIT 1',
-        { replacements: { id: item.id } }
-      )
-
-      if (!existing || existing.length === 0) {
-        formData.push({
-          ...item,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-      }
+      formData.push({
+        ...item,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
     }
   }
 
-  if (formData.length > 0) {
-    await queryInterface.bulkInsert('roles', formData)
-  }
+  await queryInterface.bulkInsert('roles', formData)
 }
 
 export async function down(

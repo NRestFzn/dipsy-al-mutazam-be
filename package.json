@@ -28,8 +28,7 @@
     "db:drop": "sequelize-cli db:drop",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:refresh": "sequelize-cli db:migrate:undo:all",
-    "db:seed": "sequelize-cli db:seed:all",
-    "db:fresh": "sequelize-cli db:drop && sequelize-cli db:create && sequelize-cli db:migrate && sequelize-cli db:seed:all"
+    "db:seed": "sequelize-cli db:seed:all"
   },
   "dependencies": {
     "@types/compression": "^1.8.1",
