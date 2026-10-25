@@ -3,7 +3,12 @@ import User from '@/database/model/user'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import JwtToken from '@/libs/jwtToken'
 import { env } from '@/config/env.config'
-import { AuthResponseDto, LoginDto, LoginWithNikDto, RegisterDto } from '../dto'
+import {
+  AuthResponseDto,
+  LoginDto,
+  LoginWithNisnDto,
+  RegisterDto,
+} from '../dto'
 import { RoleId } from '@/libs/constant/roleIds'
 import UserDetail from '@/database/model/userDetail'
 import Role from '@/database/model/role'
@@ -12,10 +17,8 @@ import UserHasRoles from '@/database/model/userHasRoles'
 const jwt = new JwtToken({ secret: env.JWT_SECRET, expires: env.JWT_EXPIRES })
 
 export class AuthRepository {
-  public createEmailFromFullnameAndNik(fullname: string, nik: string): string {
-    const nameForEmail = fullname.toLowerCase().split(' ').slice(0, 2).join('')
-    const lastDigitNik = nik.slice(-4)
-    return `${nameForEmail}.${lastDigitNik}@cibiru.wetan`
+  public createEmailFromNisn(nisn: string): string {
+    return `${nisn}@al-multazam.sch.id`
   }
 
   async login(formData: LoginDto): Promise<AuthResponseDto> {
@@ -64,20 +67,21 @@ export class AuthRepository {
     return data
   }
 
-  async loginWithNik(formData: LoginWithNikDto): Promise<AuthResponseDto> {
+  async loginWithNisn(formData: LoginWithNisnDto): Promise<AuthResponseDto> {
+    const nisn = formData.nisn || (formData as any).nik
     const getUser = await UserDetail.findOne({
-      where: { nik: formData.nik },
+      where: { nisn },
       include: [{ model: User.scope('withPassword') }],
     })
 
-    if (!getUser) throw new ErrorResponse.NotFound('auth.loginNikFailed')
+    if (!getUser) throw new ErrorResponse.NotFound('auth.loginNisnFailed')
 
     const isPasswordMatch = await getUser.user.comparePassword(
       formData.password
     )
 
     if (!isPasswordMatch)
-      throw new ErrorResponse.BadRequest('auth.loginNikFailed')
+      throw new ErrorResponse.BadRequest('auth.loginNisnFailed')
 
     const data = await this.login({
       email: getUser.user.email,
@@ -87,21 +91,23 @@ export class AuthRepository {
     return data
   }
 
+
   async register(formData: RegisterDto): Promise<AuthResponseDto> {
+    const nisn = formData.nisn || (formData as any).nik
+    const GradeId = formData.GradeId
+    const ClassId = formData.ClassId
+
     await db.sequelize!.transaction(async (transaction) => {
-      const duplicateNik = await UserDetail.findOne({
-        where: { nik: formData.nik },
+      const duplicateNisn = await UserDetail.findOne({
+        where: { nisn },
         transaction,
       })
 
-      if (duplicateNik)
-        throw new ErrorResponse.BaseResponse('auth.nikUsed', 'Conflict', 409)
+      if (duplicateNisn)
+        throw new ErrorResponse.BaseResponse('auth.nisnUsed', 'Conflict', 409)
 
       if (!formData.email) {
-        formData.email = this.createEmailFromFullnameAndNik(
-          formData.fullname,
-          formData.nik
-        )
+        formData.email = this.createEmailFromNisn(nisn)
       }
 
       const duplicateEmail = await User.findOne({
@@ -139,15 +145,17 @@ export class AuthRepository {
       await UserDetail.create(
         {
           ...formData,
-          nik: formData.nik,
+          nisn,
+          GradeId,
+          ClassId,
           UserId: user.id,
         },
         { transaction }
       )
     })
 
-    const data = await this.loginWithNik({
-      nik: formData.nik,
+    const data = await this.loginWithNisn({
+      nisn,
       password: formData.password,
     })
 

@@ -188,8 +188,8 @@ route.get(
     const query: SummarizeByUserIdQuery = summarizeByUserIdQuery.validateSync({
       ...req.query,
       UserId: user.id,
-      RukunTetanggaId: user.userDetail.RukunTetanggaId,
-      RukunWargaId: user.userDetail.RukunWargaId,
+      RukunTetanggaId: user.userDetail.ClassId,
+      RukunWargaId: user.userDetail.GradeId,
     })
 
     const options: IGetSummaryOptionsByUser = {

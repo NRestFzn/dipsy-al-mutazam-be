@@ -30,7 +30,4 @@ export default class RukunTetangga extends BaseSchema {
 
   @BelongsTo(() => RukunWarga)
   rukunWarga: RukunWarga
-
-  @HasMany(() => UserDetail)
-  userDetails: UserDetail
 }

@@ -1,14 +1,15 @@
 import * as yup from 'yup'
 
-export const createResidentSchema = yup.object().shape({
+export const createStudentSchema = yup.object().shape({
   fullname: yup.string().required('validation.required'),
-  nik: yup
+  nisn: yup
     .string()
     .required('validation.required')
-    .min(16, 'validation.min')
-    .max(16, 'validation.max'),
+    .min(10, 'validation.min')
+    .max(10, 'validation.max')
+    .matches(/^\d{10}$/, 'validation.number'),
   email: yup.string().email('validation.email').optional().nullable(),
-  phoneNumber: yup.string().required('validation.required'),
+  phoneNumber: yup.string().optional().nullable(),
   password: yup
     .string()
     .min(8, 'validation.min')
@@ -22,24 +23,23 @@ export const createResidentSchema = yup.object().shape({
     .oneOf(['m', 'f'], 'validation.oneOf')
     .required('validation.required'),
   birthDate: yup.date().required('validation.required'),
-  profession: yup.string().required('validation.required'),
-  isKader: yup.boolean().required('validation.required'),
-  RukunWargaId: yup.string().required('validation.required'),
-  RukunTetanggaId: yup.string().required('validation.required'),
-  MarriageStatusId: yup.string().required('validation.required'),
-  EducationId: yup.string().required('validation.required'),
-  SalaryRangeId: yup.string().required('validation.required'),
+  GradeId: yup.string().required('validation.required'),
+  ClassId: yup.string().required('validation.required'),
+  nis: yup.string().optional().nullable(),
+  entryYear: yup.string().optional().nullable(),
+  academicYear: yup.string().optional().nullable(),
 })
 
-export const updateResidentSchema = yup.object().shape({
+export const updateStudentSchema = yup.object().shape({
   fullname: yup.string().required('validation.required'),
-  nik: yup
+  nisn: yup
     .string()
     .required('validation.required')
-    .min(16, 'validation.min')
-    .max(16, 'validation.max'),
+    .min(10, 'validation.min')
+    .max(10, 'validation.max')
+    .matches(/^\d{10}$/, 'validation.number'),
   email: yup.string().email('validation.email').required('validation.required'),
-  phoneNumber: yup.string().required('validation.required'),
+  phoneNumber: yup.string().optional().nullable(),
 
   password: yup
     .string()
@@ -66,17 +66,15 @@ export const updateResidentSchema = yup.object().shape({
     .oneOf(['m', 'f'], 'validation.oneOf')
     .required('validation.required'),
   birthDate: yup.date().required('validation.required'),
-  profession: yup.string().required('validation.required'),
-  isKader: yup.boolean().required('validation.required'),
-  RukunWargaId: yup.string().required('validation.required'),
-  RukunTetanggaId: yup.string().required('validation.required'),
-  MarriageStatusId: yup.string().required('validation.required'),
-  EducationId: yup.string().required('validation.required'),
-  SalaryRangeId: yup.string().required('validation.required'),
+  GradeId: yup.string().required('validation.required'),
+  ClassId: yup.string().required('validation.required'),
+  nis: yup.string().optional().nullable(),
+  entryYear: yup.string().optional().nullable(),
+  academicYear: yup.string().optional().nullable(),
 })
 
 export const updateProfileSchema = yup.object().shape({
-  phoneNumber: yup.string().required('validation.required'),
+  phoneNumber: yup.string().optional().nullable(),
 
   password: yup
     .string()
@@ -97,28 +95,23 @@ export const updateProfileSchema = yup.object().shape({
           .oneOf([yup.ref('password')], 'validation.same'),
       otherwise: (schema) => schema.notRequired().nullable(),
     }),
-
-  profession: yup.string().required('validation.required'),
-  EducationId: yup.string().required('validation.required'),
-  SalaryRangeId: yup.string().required('validation.required'),
 })
-export const residentQuerySchema = yup.object().shape({
+
+export const studentQuerySchema = yup.object().shape({
   id: yup.string().required('validation.required'),
 })
 
-export const residentNikQuerySchema = yup.object().shape({
-  nik: yup
+export const studentNisnQuerySchema = yup.object().shape({
+  nisn: yup
     .string()
     .required('validation.required')
-    .min(16, 'validation.min')
-    .max(16, 'validation.max')
-    .matches(/^\d+$/, 'validation.number'),
+    .min(10, 'validation.min')
+    .max(10, 'validation.max')
+    .matches(/^\d{10}$/, 'validation.number'),
 })
 
-export type ResidentQuery = yup.InferType<typeof residentQuerySchema>
+export type StudentQuery = yup.InferType<typeof studentQuerySchema>
+export type StudentNisnQuery = yup.InferType<typeof studentNisnQuerySchema>
+export type CreateStudent = yup.InferType<typeof createStudentSchema>
+export type UpdateStudent = yup.InferType<typeof updateStudentSchema>
 
-export type ResidentNikQuery = yup.InferType<typeof residentNikQuerySchema>
-
-export type CreateResident = yup.InferType<typeof createResidentSchema>
-
-export type UpdateResident = yup.InferType<typeof updateResidentSchema>

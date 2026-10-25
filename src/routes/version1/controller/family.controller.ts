@@ -83,10 +83,10 @@ route.post(
 
     const formData = req.getBody()
     const values = registerSchema.validateSync(formData)
-    const data = await repository.registerAndAddMember(userDetail.FamilyId, {
-      ...values,
-      isKader: false,
-    })
+    const data = await repository.registerAndAddMember(
+      userDetail.FamilyId,
+      values as any
+    )
     const httpResponse = HttpResponse.created({
       message: 'Berhasil mendaftarkan anggota keluarga',
       data,
@@ -205,10 +205,7 @@ route.post(
     const id = req.params.id as string
     const formData = req.getBody()
     const values = registerSchema.validateSync(formData)
-    const data = await repository.registerAndAddMember(id, {
-      ...values,
-      isKader: false,
-    })
+    const data = await repository.registerAndAddMember(id, values as any)
     const httpResponse = HttpResponse.created({
       message: 'Berhasil mendaftarkan anggota keluarga',
       data,
