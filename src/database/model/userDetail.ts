@@ -10,7 +10,6 @@ import BaseSchema from './_baseModel'
 import Grade from './grade'
 import Class from './class'
 import User from './user'
-import Family from './family'
 
 @Table({ freezeTableName: true, tableName: 'user_details' })
 export default class UserDetail extends BaseSchema {
@@ -68,15 +67,4 @@ export default class UserDetail extends BaseSchema {
 
   @BelongsTo(() => Class)
   class: Class
-
-  @IsUUID(4)
-  @ForeignKey(() => Family)
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-  })
-  FamilyId: string
-
-  @BelongsTo(() => Family)
-  family: Family
 }
