@@ -12,13 +12,15 @@ export interface UserDto {
 
 export interface UserDetailDto extends UserDto {
   userDetail: {
-    RukunWargaId: string
-    RukunTetanggaId: string
-    MarriageStatusId: string
-    EducationId: string
-    SalaryRangeId: string
-    profession: string
-    nik: string
+    GradeId?: string
+    ClassId?: string
+    nisn?: string
+    nis?: string
+    entryYear?: string
+    academicYear?: string
+    phoneNumber?: string
+    gender?: string
+    birthDate?: Date
   }
 }
 
