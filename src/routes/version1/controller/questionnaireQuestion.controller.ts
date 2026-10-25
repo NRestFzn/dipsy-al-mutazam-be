@@ -20,7 +20,7 @@ const route = express.Router()
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
@@ -40,7 +40,7 @@ route.post(
 route.get(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAll(req)
 
@@ -56,7 +56,7 @@ route.get(
 route.get(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: QuestionnaireQuestionQuery = req.getParams()
 
@@ -76,7 +76,7 @@ route.get(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: QuestionnaireQuestionQuery = req.getParams()
 
@@ -95,7 +95,7 @@ route.delete(
 route.put(
   '/bulk-update',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.adminMedis]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 

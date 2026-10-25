@@ -4,7 +4,7 @@ import { AuthRepository } from '@/features/auth/repository/authRepository'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
   loginSchema,
-  loginWithNisnSchema,
+  loginWithNikSchema,
   registerSchema,
 } from '@/features/auth/schema'
 
@@ -17,16 +17,9 @@ route.post(
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    if (!formData.GradeId && formData.TingkatId) {
-      formData.GradeId = formData.TingkatId
-    }
-    if (!formData.ClassId && formData.KelasId) {
-      formData.ClassId = formData.KelasId
-    }
-
     const values = registerSchema.validateSync(formData)
 
-    const data = await repository.register(values as any)
+    const data = await repository.register({ ...values, isKader: false })
 
     const httpResponse = HttpResponse.created({
       message: req.t.auth.registerSuccess,
@@ -56,13 +49,13 @@ route.post(
 )
 
 route.post(
-  '/signin/student',
+  '/signin/resident',
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = loginWithNisnSchema.validateSync(formData)
+    const values = loginWithNikSchema.validateSync(formData)
 
-    const data = await repository.loginWithNisn(values)
+    const data = await repository.loginWithNik(values)
 
     const httpResponse = HttpResponse.get({
       message: req.t.auth.loginSuccess,
