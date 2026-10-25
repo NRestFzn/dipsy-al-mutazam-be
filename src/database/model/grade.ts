@@ -10,6 +10,12 @@ export default class Grade extends BaseSchema {
   @Column({ type: DataType.ENUM('SMP', 'SMA'), allowNull: true })
   level: string
 
+  @Column({ type: DataType.VIRTUAL })
+  classCount: number
+
+  @Column({ type: DataType.VIRTUAL })
+  studentCount: number
+
   @HasMany(() => Class)
   classes: Class[]
 }

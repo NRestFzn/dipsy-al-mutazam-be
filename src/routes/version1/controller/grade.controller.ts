@@ -1,19 +1,18 @@
-import { RukunWargaRepository } from '@/features/rukunWarga/repository/rukunWargaRepository'
+import { GradeRepository } from '@/features/grade/repository/gradeRepository'
 import { permissionAccess } from '@/middleware/permissionAccess'
 import authorization from '@/middleware/authorization'
 import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
-  RukunWargaQuery,
-  createRukunWargaSchema,
-  rukunWargaQuerySchema,
-  updateRukunWargaSchema,
-} from '@/features/rukunWarga/schema'
+  GradeQuery,
+  createGradeSchema,
+  gradeQuerySchema,
+  updateGradeSchema,
+} from '@/features/grade/schema'
 import asyncHandler from '@/helper/asyncHandler'
 import { RoleId } from '@/libs/constant/roleIds'
-import _ from 'lodash'
 
-const repository = new RukunWargaRepository()
+const repository = new GradeRepository()
 
 const route = express.Router()
 
@@ -24,7 +23,7 @@ route.post(
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = createRukunWargaSchema.validateSync(formData)
+    const values = createGradeSchema.validateSync(formData)
 
     const data = await repository.add(values)
 
@@ -53,12 +52,10 @@ route.get(
 
 route.get(
   '/:id',
-  authorization(),
-  permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: RukunWargaQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = rukunWargaQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
     const data = await repository.getById(querySchema.id)
 
@@ -76,9 +73,9 @@ route.delete(
   authorization(),
   permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: RukunWargaQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = rukunWargaQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
     const data = await repository.delete(querySchema.id)
 
@@ -97,11 +94,11 @@ route.put(
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = updateRukunWargaSchema.validateSync(formData)
+    const values = updateGradeSchema.validateSync(formData)
 
-    const params: RukunWargaQuery = req.getParams()
+    const params: GradeQuery = req.getParams()
 
-    const querySchema = rukunWargaQuerySchema.validateSync(params)
+    const querySchema = gradeQuerySchema.validateSync(params)
 
     const data = await repository.update(querySchema.id, values)
 
@@ -114,4 +111,4 @@ route.put(
   })
 )
 
-export { route as RukunWargaController }
+export { route as GradeController }
