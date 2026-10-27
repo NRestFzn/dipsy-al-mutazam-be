@@ -126,6 +126,30 @@ route.get(
 
 
 route.get(
+  '/taught-history',
+  authorization(),
+  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  asyncHandler(async (req: Request, res: Response) => {
+    const user: UserLoginState = req.getState('userLoginState')
+    const query = req.query as any
+
+    const teacherId =
+      user.RoleIds.includes(RoleId.gurubk) && query.TeacherId
+        ? String(query.TeacherId)
+        : user.uid
+
+    const data = await repository.getTaughtHistory(teacherId)
+
+    const httpResponse = HttpResponse.get({
+      message: req.t.success.retrieved,
+      data,
+    })
+
+    res.status(httpResponse.statusCode).json(httpResponse)
+  })
+)
+
+route.get(
   '/:id',
   authorization(),
   permissionAccess([RoleId.gurubk, RoleId.walikelas]),
