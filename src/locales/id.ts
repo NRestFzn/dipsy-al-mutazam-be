@@ -26,40 +26,14 @@ const id: Translation = {
 
   auth: {
     loginFailed: 'Email atau kata sandi salah',
-    loginNikFailed: 'NISN/NIK atau kata sandi salah',
+    loginNikFailed: 'NISN atau kata sandi salah',
     loginNisnFailed: 'NISN atau kata sandi salah',
     emailUsed: 'Email sudah terdaftar',
-    nikUsed: 'NIK sudah terdaftar',
+    nikUsed: 'NISN sudah terdaftar',
     nisnUsed: 'NISN sudah terdaftar',
     phoneUsed: 'Nomor telepon sudah terdaftar',
     loginSuccess: 'Login berhasil',
     registerSuccess: 'Pengguna berhasil didaftarkan',
-  },
-
-  user: {
-    notFound: 'Pengguna tidak ditemukan',
-    profileUpdated: 'Profil berhasil diperbarui',
-    profilePictureUpdated: 'Foto profil berhasil diperbarui',
-    inCompleteDetail: 'Pengguna belum mengisi data lengkap',
-  },
-
-  questionnaire: {
-    duplicateOrder: 'Urutan berganda ditemukan',
-    inCompleteAnswer: 'Mohon jawab semua pertanyaan yang tersedia',
-    exceededAnswer:
-      'Jawaban yang dikirim melebihi jumlah pertanyaan yang tersedia',
-    notFound: 'Kuesioner tidak ditemukan',
-    questionNotFound: 'Pertanyaan dengan id {id} tidak ditemukan',
-    noQuestion: 'Kuesioner belum memiliki pertanyaan',
-    invalidScoringConfig: 'Konfigurasi penilaian kuesioner tidak valid',
-    invalidQuestionCategory: 'Kelompok penilaian pertanyaan tidak valid',
-    invalidQuestionScoreOverrides: 'Perubahan skor pertanyaan tidak valid',
-    invalidAnswerOption: 'Pilihan jawaban untuk pertanyaan {id} tidak valid',
-    scoreOutsideResultRange:
-      'Skor berada di luar rentang hasil yang telah dikonfigurasi',
-    duplicateAnswer: 'Satu pertanyaan tidak boleh dijawab lebih dari sekali',
-    questionNotInQuestionnaire:
-      'Pertanyaan dengan id {id} bukan bagian dari kuesioner ini',
   },
 
   odgjResident: {
@@ -82,6 +56,57 @@ const id: Translation = {
       'Jadwal pemeriksaan berulang tidak boleh melebihi 120 pertemuan',
   },
 
+
+  user: {
+    notFound: 'Pengguna tidak ditemukan',
+    profileUpdated: 'Profil berhasil diperbarui',
+    profilePictureUpdated: 'Foto profil berhasil diperbarui',
+    inCompleteDetail: 'Pengguna belum mengisi data lengkap',
+  },
+
+  student: {
+    retrieved: 'Data siswa berhasil diambil',
+    created: 'Data siswa berhasil dibuat',
+    updated: 'Data siswa berhasil diperbarui',
+    deleted: 'Data siswa berhasil dihapus',
+    notFound: 'Data siswa tidak ditemukan',
+  },
+
+  grade: {
+    retrieved: 'Data tingkat berhasil diambil',
+    created: 'Data tingkat berhasil dibuat',
+    updated: 'Data tingkat berhasil diperbarui',
+    deleted: 'Data tingkat berhasil dihapus',
+    notFound: 'Data tingkat tidak ditemukan',
+  },
+
+  class: {
+    retrieved: 'Data kelas berhasil diambil',
+    created: 'Data kelas berhasil dibuat',
+    updated: 'Data kelas berhasil diperbarui',
+    deleted: 'Data kelas berhasil dihapus',
+    notFound: 'Data kelas tidak ditemukan',
+  },
+
+  questionnaire: {
+    duplicateOrder: 'Urutan berganda ditemukan',
+    inCompleteAnswer: 'Mohon jawab semua pertanyaan yang tersedia',
+    exceededAnswer:
+      'Jawaban yang dikirim melebihi jumlah pertanyaan yang tersedia',
+    notFound: 'Kuesioner tidak ditemukan',
+    questionNotFound: 'Pertanyaan dengan id {id} tidak ditemukan',
+    noQuestion: 'Kuesioner belum memiliki pertanyaan',
+    invalidScoringConfig: 'Konfigurasi penilaian kuesioner tidak valid',
+    invalidQuestionCategory: 'Kelompok penilaian pertanyaan tidak valid',
+    invalidQuestionScoreOverrides: 'Perubahan skor pertanyaan tidak valid',
+    invalidAnswerOption: 'Pilihan jawaban untuk pertanyaan {id} tidak valid',
+    scoreOutsideResultRange:
+      'Skor berada di luar rentang hasil yang telah dikonfigurasi',
+    duplicateAnswer: 'Satu pertanyaan tidak boleh dijawab lebih dari sekali',
+    questionNotInQuestionnaire:
+      'Pertanyaan dengan id {id} bukan bagian dari kuesioner ini',
+  },
+
   validation: {
     required: '{field} wajib diisi',
     email: 'Format {field} tidak valid',
@@ -97,22 +122,20 @@ const id: Translation = {
 
   attributes: {
     fullname: 'Nama Lengkap',
-    nik: 'Nomor Induk Kependudukan (NIK)',
     nisn: 'Nomor Induk Siswa Nasional (NISN)',
+    nis: 'Nomor Induk Siswa (NIS)',
     GradeId: 'Tingkat',
     ClassId: 'Kelas',
+    entryYear: 'Tahun Masuk',
+    academicYear: 'Tahun Ajaran',
+    homeroomTeacherId: 'Wali Kelas',
     email: 'Alamat Email',
     phoneNumber: 'Nomor Telepon',
     password: 'Kata Sandi',
     confirmPassword: 'Konfirmasi Kata Sandi',
+    confirmNewPassword: 'Konfirmasi Kata Sandi Baru',
     gender: 'Jenis Kelamin',
     birthDate: 'Tanggal Lahir',
-    profession: 'Pekerjaan',
-    RukunWargaId: 'Rukun Warga',
-    RukunTetanggaId: 'Rukun Tetangga',
-    MarriageStatusId: 'Status Pernikahan',
-    EducationId: 'Pendidikan Terakhir',
-    SalaryRangeId: 'Rentang Gaji',
     title: 'Judul',
     description: 'Deskripsi',
     status: 'Status',
@@ -136,15 +159,9 @@ const id: Translation = {
     answerValue: 'Jawaban',
     startDate: 'Tanggal Mulai',
     endDate: 'Tanggal Selesai',
-    isKader: 'Status Kader',
-    confirmNewPassword: 'Konfirmasi Kata Sandi Baru',
     count: 'Jumlah',
     name: 'Nama',
-    examinationDate: 'Tanggal Pemeriksaan',
     notes: 'Catatan',
-    scheduleId: 'ID Jadwal',
-    recurrenceType: 'Pola Pengulangan',
-    recurrenceCount: 'Jumlah Pertemuan',
   },
 }
 
