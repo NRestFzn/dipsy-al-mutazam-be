@@ -8,28 +8,21 @@ export const loginSchema = yup.object({
     .required('validation.required'),
 })
 
-export const loginWithNisnSchema = yup.object({
-  nisn: yup
-    .string()
-    .required('validation.required')
-    .min(10, 'validation.min')
-    .max(10, 'validation.max')
-    .matches(/^\d{10}$/, 'validation.number'),
+export const loginWithNikSchema = yup.object({
+  nik: yup.string().required('validation.required'),
   password: yup
     .string()
     .min(8, 'validation.min')
     .required('validation.required'),
 })
 
-
 export const registerSchema = yup.object({
   fullname: yup.string().required('validation.required'),
-  nisn: yup
+  nik: yup
     .string()
     .required('validation.required')
-    .min(10, 'validation.min')
-    .max(10, 'validation.max')
-    .matches(/^\d{10}$/, 'validation.number'),
+    .min(16, 'validation.min')
+    .max(16, 'validation.max'),
   email: yup.string().email('validation.email').optional().nullable(),
   phoneNumber: yup.string().optional().nullable(),
   password: yup
@@ -45,9 +38,12 @@ export const registerSchema = yup.object({
     .oneOf(['m', 'f'], 'validation.oneOf')
     .required('validation.required'),
   birthDate: yup.date().required('validation.required'),
-  GradeId: yup.string().required('validation.required'),
-  ClassId: yup.string().required('validation.required'),
-  nis: yup.string().optional().nullable(),
-  entryYear: yup.string().optional().nullable(),
-  academicYear: yup.string().optional().nullable(),
+  profession: yup.string().required('validation.required'),
+
+  RukunWargaId: yup.string().required('validation.required'),
+  RukunTetanggaId: yup.string().required('validation.required'),
+  MarriageStatusId: yup.string().required('validation.required'),
+  EducationId: yup.string().required('validation.required'),
+  SalaryRangeId: yup.string().required('validation.required'),
+  isKader: yup.boolean().optional().nullable(),
 })
