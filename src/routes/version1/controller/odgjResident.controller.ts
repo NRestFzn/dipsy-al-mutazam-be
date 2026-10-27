@@ -20,7 +20,7 @@ const route = express.Router()
 route.get(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAll(req)
 
@@ -36,7 +36,7 @@ route.get(
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
     const values = createOdgjResidentSchema.validateSync(formData, {
@@ -58,7 +58,7 @@ route.post(
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = odgjResidentParamSchema.validateSync(req.params)
     const formData = req.getBody()
@@ -80,7 +80,7 @@ route.put(
 route.post(
   '/:id/schedules',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = odgjResidentParamSchema.validateSync(req.params)
     const formData = req.getBody()
@@ -106,7 +106,7 @@ route.post(
 route.put(
   '/:id/schedules/:scheduleId',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = odgjScheduleParamSchema.validateSync(req.params)
     const formData = req.getBody()
@@ -132,7 +132,7 @@ route.put(
 route.delete(
   '/:id/schedules/:scheduleId',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = odgjScheduleParamSchema.validateSync(req.params)
 
@@ -150,7 +150,7 @@ route.delete(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = odgjResidentParamSchema.validateSync(req.params)
 

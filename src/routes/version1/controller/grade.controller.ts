@@ -8,7 +8,7 @@ const repository = new GradeRepository()
 
 const route = express.Router()
 
-// Tingkat/jenjang adalah master data (diisi lewat seeder), jadi hanya tersedia endpoint baca.
+// Tingkat/jenjang adalah master data, jadi hanya tersedia endpoint baca.
 route.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {

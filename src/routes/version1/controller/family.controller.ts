@@ -20,7 +20,7 @@ const route = express.Router()
 route.get(
   '/me/my-family',
   authorization(),
-  permissionAccess([RoleId.kepalaKeluarga, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const user = req.getState('userLoginState')
     const userDetail = await UserDetail.findOne({ where: { UserId: user.uid } })
@@ -43,7 +43,7 @@ route.get(
 route.post(
   '/me/my-family/members/by-nik',
   authorization(),
-  permissionAccess([RoleId.kepalaKeluarga, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const user = req.getState('userLoginState')
     const userDetail = await UserDetail.findOne({ where: { UserId: user.uid } })
@@ -70,7 +70,7 @@ route.post(
 route.post(
   '/me/my-family/members/register',
   authorization(),
-  permissionAccess([RoleId.kepalaKeluarga, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const user = req.getState('userLoginState')
     const userDetail = await UserDetail.findOne({ where: { UserId: user.uid } })
@@ -98,7 +98,7 @@ route.post(
 route.delete(
   '/me/my-family/members/:userId',
   authorization(),
-  permissionAccess([RoleId.kepalaKeluarga, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const user = req.getState('userLoginState')
     const userDetail = await UserDetail.findOne({ where: { UserId: user.uid } })
@@ -122,7 +122,7 @@ route.delete(
 route.get(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAllFamilies()
     const httpResponse = HttpResponse.get({
@@ -136,7 +136,7 @@ route.get(
 route.get(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string
     const data = await repository.getFamilyDetail(id)
@@ -151,7 +151,7 @@ route.get(
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
     const values = createFamilySchema.validateSync(formData)
@@ -167,7 +167,7 @@ route.post(
 route.put(
   '/:id/head',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string
     const formData = req.getBody()
@@ -184,7 +184,7 @@ route.put(
 route.post(
   '/:id/members/by-nik',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string
     const { nik } = req.getBody()
@@ -200,7 +200,7 @@ route.post(
 route.post(
   '/:id/members/register',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string
     const formData = req.getBody()
@@ -217,7 +217,7 @@ route.post(
 route.delete(
   '/:id/members/:userId',
   authorization(),
-  permissionAccess([RoleId.adminDesa, RoleId.kaderDesa]),
+  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string
     const userId = req.params.userId as string

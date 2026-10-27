@@ -237,15 +237,13 @@ route.post(
 
     const activeRoleId = req.header('x-active-role')
 
-    const isKaderDesa =
-      activeRoleId === RoleId.kaderDesa &&
-      user.RoleIds.includes(RoleId.kaderDesa)
+    const isTeacher =
+      (activeRoleId === RoleId.gurubk &&
+        user.RoleIds.includes(RoleId.gurubk)) ||
+      (activeRoleId === RoleId.walikelas &&
+        user.RoleIds.includes(RoleId.walikelas))
 
-    const isKepalaKeluarga =
-      activeRoleId === RoleId.kepalaKeluarga &&
-      user.RoleIds.includes(RoleId.kepalaKeluarga)
-
-    const isAssisted = isKaderDesa || isKepalaKeluarga
+    const isAssisted = isTeacher
 
     const newFormData: CreateQuestionnaireSubmissionDto = {
       UserId: isAssisted ? formData.UserId : user.uid,
