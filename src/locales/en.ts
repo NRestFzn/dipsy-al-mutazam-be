@@ -32,26 +32,6 @@ export default {
     registerSuccess: 'User registered successfully',
   },
 
-  odgjResident: {
-    retrieved: 'ODGJ resident data retrieved successfully',
-    created: 'ODGJ resident added successfully',
-    updated: 'ODGJ resident data updated successfully',
-    deleted: 'ODGJ resident data deleted successfully',
-    notFound: 'ODGJ resident data not found',
-    duplicate: 'Resident is already registered as ODGJ',
-    residentNotFound: 'Resident not found',
-    scheduleCreated: 'Examination schedule added successfully',
-    recurringSchedulesCreated:
-      'Recurring examination schedules added successfully',
-    scheduleUpdated: 'Examination schedule updated successfully',
-    scheduleDeleted: 'Examination schedule deleted successfully',
-    scheduleNotFound: 'Examination schedule not found',
-    recurrenceCountMin:
-      'Recurring examination schedules require at least 2 meetings',
-    recurrenceCountMax:
-      'Recurring examination schedules cannot exceed 120 meetings',
-  },
-
 
   user: {
     notFound: 'User not found',
