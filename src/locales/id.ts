@@ -39,6 +39,10 @@ const id: Translation = {
   },
 
 
+  teacher: {
+    stillHomeroom: 'Guru masih menjadi wali kelas, lepas penugasan kelasnya terlebih dahulu',
+  },
+
   user: {
     notFound: 'Pengguna tidak ditemukan',
     profileUpdated: 'Profil berhasil diperbarui',

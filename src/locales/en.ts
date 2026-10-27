@@ -35,6 +35,10 @@ export default {
   },
 
 
+  teacher: {
+    stillHomeroom: 'Teacher is still a homeroom teacher, unassign the class first',
+  },
+
   user: {
     notFound: 'User not found',
     profileUpdated: 'Profile updated successfully',
