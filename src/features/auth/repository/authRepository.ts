@@ -99,6 +99,14 @@ export class AuthRepository {
       throw new ErrorResponse.BadRequest('auth.loginNisnFailed')
     }
 
+    if (getUser.studentStatus === 'lulus') {
+      throw new ErrorResponse.Forbidden('auth.studentGraduated')
+    }
+
+    if (getUser.studentStatus === 'pindah') {
+      throw new ErrorResponse.Forbidden('auth.studentMoved')
+    }
+
     const RoleIds = getUser.user.roles.map((role) => role.id)
 
     const isStudent = RoleIds.includes(RoleId.siswa)

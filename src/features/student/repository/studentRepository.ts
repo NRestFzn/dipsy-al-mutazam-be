@@ -22,6 +22,11 @@ import UserHasRoles from '@/database/model/userHasRoles'
 import Role from '@/database/model/role'
 import { AuthRepository } from '../../auth/repository/authRepository'
 import { Op } from 'sequelize'
+import StudentClassHistory from '@/database/model/studentClassHistory'
+import {
+  GraduateStudentsDto,
+  PromoteStudentsDto,
+} from '../dto'
 
 const authRepository = new AuthRepository()
 
@@ -37,7 +42,8 @@ export class StudentRepository {
     const isDetailRequired = Boolean(
       detailQuery.GradeId ||
         detailQuery.ClassId ||
-        detailQuery.nisn
+        detailQuery.nisn ||
+        (detailQuery.status && detailQuery.status !== 'semua')
     )
 
     const { rows: data, count: totalRows } = await User.findAndCountAll({
@@ -214,6 +220,133 @@ export class StudentRepository {
         { ...formData },
         { where: { UserId: data.id }, transaction }
       )
+    })
+  }
+
+  private async snapshotHistory(
+    detail: UserDetail,
+    academicYear: string,
+    transaction: any
+  ): Promise<void> {
+    if (!detail.ClassId && !detail.GradeId) return
+
+    const existing = await StudentClassHistory.findOne({
+      where: { UserId: detail.UserId, academicYear },
+      transaction,
+    })
+
+    if (existing) return
+
+    const classData = detail.ClassId
+      ? await Class.findByPk(detail.ClassId, { transaction })
+      : null
+
+    await StudentClassHistory.create(
+      {
+        UserId: detail.UserId,
+        academicYear,
+        GradeId: detail.GradeId,
+        ClassId: detail.ClassId,
+        homeroomTeacherId: classData?.homeroomTeacherId ?? null,
+      } as any,
+      { transaction }
+    )
+  }
+
+  async promote(formData: PromoteStudentsDto): Promise<void> {
+    await db.sequelize!.transaction(async (transaction) => {
+      for (const item of formData.promotions) {
+        const detail = await UserDetail.findOne({
+          where: { UserId: item.studentId },
+          transaction,
+        })
+
+        if (!detail) throw new ErrorResponse.NotFound('student.notFound')
+
+        if (detail.academicYear && detail.academicYear !== formData.academicYear) {
+          await this.snapshotHistory(detail, detail.academicYear, transaction)
+        }
+
+        const targetClass = await Class.findByPk(item.targetClassId, {
+          transaction,
+        })
+
+        if (!targetClass) throw new ErrorResponse.NotFound('class.notFound')
+
+        await detail.update(
+          {
+            GradeId: item.targetGradeId,
+            ClassId: item.targetClassId,
+            academicYear: formData.academicYear,
+            studentStatus: 'aktif',
+          },
+          { transaction }
+        )
+
+        await StudentClassHistory.destroy({
+          where: {
+            UserId: item.studentId,
+            academicYear: formData.academicYear,
+          },
+          transaction,
+        })
+
+        await StudentClassHistory.create(
+          {
+            UserId: item.studentId,
+            academicYear: formData.academicYear,
+            GradeId: item.targetGradeId,
+            ClassId: item.targetClassId,
+            homeroomTeacherId: targetClass.homeroomTeacherId ?? null,
+            notes: item.notes ?? null,
+          } as any,
+          { transaction }
+        )
+      }
+    })
+  }
+
+  async graduate(formData: GraduateStudentsDto): Promise<void> {
+    await db.sequelize!.transaction(async (transaction) => {
+      for (const studentId of formData.studentIds) {
+        const detail = await UserDetail.findOne({
+          where: { UserId: studentId },
+          transaction,
+        })
+
+        if (!detail) throw new ErrorResponse.NotFound('student.notFound')
+
+        if (detail.academicYear) {
+          await this.snapshotHistory(detail, detail.academicYear, transaction)
+        }
+
+        await detail.update(
+          {
+            studentStatus: 'lulus',
+            graduationYear: formData.graduationYear,
+          },
+          { transaction }
+        )
+      }
+    })
+  }
+
+  async getAcademicHistory(studentId: string): Promise<StudentClassHistory[]> {
+    return StudentClassHistory.findAll({
+      where: { UserId: studentId },
+      include: [
+        { model: Grade },
+        { model: Class },
+        {
+          model: User,
+          as: 'homeroomTeacher',
+          attributes: ['id', 'fullname', 'email'],
+        },
+      ],
+      order: [
+        ['academicYear', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
     })
   }
 

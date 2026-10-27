@@ -71,6 +71,11 @@ export const updateStudentSchema = yup.object().shape({
   nis: yup.string().optional().nullable(),
   entryYear: yup.string().optional().nullable(),
   academicYear: yup.string().optional().nullable(),
+  studentStatus: yup
+    .string()
+    .oneOf(['aktif', 'pindah'], 'validation.oneOf')
+    .optional()
+    .nullable(),
 })
 
 export const updateProfileSchema = yup.object().shape({
@@ -95,6 +100,44 @@ export const updateProfileSchema = yup.object().shape({
           .oneOf([yup.ref('password')], 'validation.same'),
       otherwise: (schema) => schema.notRequired().nullable(),
     }),
+})
+
+export const promoteStudentsSchema = yup.object().shape({
+  academicYear: yup
+    .string()
+    .required('validation.required')
+    .matches(/^\d{4}\/\d{4}$/, 'validation.academicYear'),
+  promotions: yup
+    .array()
+    .of(
+      yup.object().shape({
+        studentId: yup.string().required('validation.required'),
+        targetGradeId: yup.string().required('validation.required'),
+        targetClassId: yup.string().required('validation.required'),
+        notes: yup.string().optional().nullable(),
+      })
+    )
+    .min(1, 'validation.required')
+    .required('validation.required'),
+})
+
+export const graduateStudentsSchema = yup.object().shape({
+  studentIds: yup
+    .array()
+    .of(yup.string().required('validation.required'))
+    .min(1, 'validation.required')
+    .required('validation.required'),
+  graduationYear: yup
+    .string()
+    .required('validation.required')
+    .matches(/^\d{4}$/, 'validation.number'),
+})
+
+export const studentStatusSchema = yup.object().shape({
+  studentStatus: yup
+    .string()
+    .oneOf(['aktif', 'pindah'], 'validation.oneOf')
+    .required('validation.required'),
 })
 
 export const studentQuerySchema = yup.object().shape({

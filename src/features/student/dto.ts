@@ -58,6 +58,7 @@ export interface UpdateStudentDto {
   nis?: string | null
   entryYear?: string | null
   academicYear?: string | null
+  studentStatus?: 'aktif' | 'pindah' | null
 }
 
 export interface StudentQueryFilterDto {
@@ -72,6 +73,23 @@ export interface StudentDetailQueryFilterDto {
 
 export interface StudentNisnQueryDto {
   nisn: string
+}
+
+export interface PromotionItemDto {
+  studentId: string
+  targetGradeId: string
+  targetClassId: string
+  notes?: string | null
+}
+
+export interface PromoteStudentsDto {
+  academicYear: string
+  promotions: PromotionItemDto[]
+}
+
+export interface GraduateStudentsDto {
+  studentIds: string[]
+  graduationYear: string
 }
 
 export interface UpdateStudentProfileDto {

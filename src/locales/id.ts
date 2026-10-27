@@ -31,6 +31,8 @@ const id: Translation = {
     emailUsed: 'Email sudah terdaftar',
     nikUsed: 'NISN sudah terdaftar',
     nisnUsed: 'NISN sudah terdaftar',
+    studentGraduated: 'Akun ini sudah lulus, tidak dapat digunakan untuk masuk',
+    studentMoved: 'Akun ini tidak aktif karena siswa sudah pindah',
     phoneUsed: 'Nomor telepon sudah terdaftar',
     loginSuccess: 'Login berhasil',
     registerSuccess: 'Pengguna berhasil didaftarkan',
@@ -88,6 +90,7 @@ const id: Translation = {
   },
 
   validation: {
+    academicYear: 'Format tahun ajaran harus YYYY/YYYY',
     required: '{field} wajib diisi',
     email: 'Format {field} tidak valid',
     min: '{field} terlalu pendek',
