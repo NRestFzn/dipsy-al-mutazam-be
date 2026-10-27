@@ -1,33 +1,34 @@
 import { Request } from 'express'
-import { RukunTetanggaQueryFilterDto } from '../dto'
+import { GradeQueryFilterDto } from '../dto'
 import { FindOptions, WhereOptions, Op } from 'sequelize'
 import { BaseQueryRequest } from '@/routes/version1/request/_baseQueryRequest'
 
-export class RukunTetanggaQueryRepository extends BaseQueryRequest {
-  public name?: number
-  public RukunWargaId?: string
+export class GradeQueryRepository extends BaseQueryRequest {
+  public name?: string
+  public level?: string
 
   constructor(req: Request) {
     super(req)
 
-    const query = req.query as unknown as RukunTetanggaQueryFilterDto
+    const query = req.query as unknown as GradeQueryFilterDto
 
     this.name = query.name
-    this.RukunWargaId = query.RukunWargaId
+    this.level = query.level
   }
 
   public queryFilter(): FindOptions {
-    const whereCondition: WhereOptions<RukunTetanggaQueryFilterDto>[] = []
-
+    const whereCondition: WhereOptions<GradeQueryFilterDto>[] = []
     if (this.name) {
       whereCondition.push({
-        name: this.name,
+        name: {
+          [Op.like]: `%${this.name}%`,
+        },
       })
     }
 
-    if (this.RukunWargaId) {
+    if (this.level) {
       whereCondition.push({
-        RukunWargaId: this.RukunWargaId,
+        level: this.level,
       })
     }
 

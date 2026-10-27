@@ -23,8 +23,8 @@ import QuestionnaireSubmission from '@/database/model/questionnaireSubmission'
 import QuestionnaireAnswer from '@/database/model/questionnaireAnswer'
 import QuestionnaireQuestion from '@/database/model/questionnaireQuestion'
 import { QueryTypes } from 'sequelize'
-import { RukunWargaRepository } from '../../rukunWarga/repository/rukunWargaRepository'
-import { RukunTetanggaRepository } from '../../rukunTetangga/repository/rukunTetanggaRepository'
+import { GradeRepository } from '../../grade/repository/gradeRepository'
+import { ClassRepository } from '../../class/repository/classRepository'
 import { UserRepository } from '../../user/repository/userRepository'
 import { Request } from 'express'
 import { QuestionnaireSubmissionQueryRepository } from './questionnaireSubmissionQueryRepository'
@@ -35,8 +35,8 @@ import Questionnaire from '@/database/model/questionnaire'
 import { evaluateQuestionnaire } from '../../questionnaire/scoring'
 
 const questionnaireRepository = new QuestionnaireRepository()
-const rukunWargaRepository = new RukunWargaRepository()
-const rukunTetanggaRepository = new RukunTetanggaRepository()
+const rukunWargaRepository = new GradeRepository() as any
+const rukunTetanggaRepository = new ClassRepository() as any
 const userRepository = new UserRepository()
 
 export class QuestionnaireSubmissionRepository {
