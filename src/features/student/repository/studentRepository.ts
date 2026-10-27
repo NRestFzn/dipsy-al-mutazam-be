@@ -331,6 +331,31 @@ export class StudentRepository {
     })
   }
 
+  async getTaughtHistory(teacherId: string): Promise<StudentClassHistory[]> {
+    return StudentClassHistory.findAll({
+      where: { homeroomTeacherId: teacherId },
+      include: [
+        {
+          model: User,
+          as: 'student',
+          attributes: ['id', 'fullname', 'email'],
+          include: [
+            {
+              model: UserDetail,
+              attributes: ['nisn', 'nis', 'studentStatus', 'graduationYear'],
+            },
+          ],
+        },
+        { model: Grade },
+        { model: Class },
+      ],
+      order: [
+        ['academicYear', 'DESC'],
+        ['createdAt', 'ASC'],
+      ],
+    })
+  }
+
   async getAcademicHistory(studentId: string): Promise<StudentClassHistory[]> {
     return StudentClassHistory.findAll({
       where: { UserId: studentId },
