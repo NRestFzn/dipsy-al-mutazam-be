@@ -5,8 +5,8 @@ import OdgjExaminationSchedule from '@/database/model/odgjExaminationSchedule'
 import OdgjResident from '@/database/model/odgjResident'
 import User from '@/database/model/user'
 import UserDetail from '@/database/model/userDetail'
-import RukunWarga from '@/database/model/rukunWarga'
-import RukunTetangga from '@/database/model/rukunTetangga'
+import Grade from '@/database/model/grade'
+import Class from '@/database/model/class'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
 import {
@@ -75,7 +75,7 @@ export class OdgjResidentRepository {
         include: [
           {
             model: UserDetail,
-            include: [{ model: RukunWarga }, { model: RukunTetangga }],
+            include: [{ model: Grade }, { model: Class }],
           },
         ],
       },
