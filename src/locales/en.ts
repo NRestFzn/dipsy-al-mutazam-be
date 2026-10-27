@@ -26,6 +26,8 @@ export default {
     loginNisnFailed: 'Invalid NISN or password',
     emailUsed: 'Email is already registered',
     nikUsed: 'NISN is already registered',
+    studentGraduated: 'This account has graduated and can no longer sign in',
+    studentMoved: 'This account is inactive because the student has transferred',
     nisnUsed: 'NISN is already registered',
     phoneUsed: 'Phone number is already registered',
     loginSuccess: 'Login successfully',
@@ -82,6 +84,7 @@ export default {
   },
 
   validation: {
+    academicYear: 'Academic year must use the YYYY/YYYY format',
     required: '{field} is required',
     email: '{field} format is invalid',
     min: '{field} is too short',

@@ -67,4 +67,14 @@ export default class UserDetail extends BaseSchema {
 
   @BelongsTo(() => Class)
   class: Class
+
+  @Column({
+    type: DataType.ENUM('aktif', 'lulus', 'pindah'),
+    allowNull: false,
+    defaultValue: 'aktif',
+  })
+  studentStatus: string
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  graduationYear: string
 }

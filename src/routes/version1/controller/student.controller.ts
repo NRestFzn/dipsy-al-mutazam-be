@@ -7,6 +7,8 @@ import {
   StudentNisnQuery,
   StudentQuery,
   createStudentSchema,
+  graduateStudentsSchema,
+  promoteStudentsSchema,
   studentNisnQuerySchema,
   studentQuerySchema,
   updateProfileSchema,
@@ -190,6 +192,58 @@ route.put(
 
     const httpResponse = HttpResponse.updated({
       message: req.t.user.profilePictureUpdated,
+      data,
+    })
+
+    res.status(httpResponse.statusCode).json(httpResponse)
+  })
+)
+
+route.post(
+  '/promotion',
+  authorization(),
+  permissionAccess([RoleId.gurubk]),
+  asyncHandler(async (req: Request, res: Response) => {
+    const values = promoteStudentsSchema.validateSync(req.getBody())
+
+    await repository.promote(values)
+
+    const httpResponse = HttpResponse.updated({
+      message: req.t.success.updated,
+    })
+
+    res.status(httpResponse.statusCode).json(httpResponse)
+  })
+)
+
+route.post(
+  '/graduation',
+  authorization(),
+  permissionAccess([RoleId.gurubk]),
+  asyncHandler(async (req: Request, res: Response) => {
+    const values = graduateStudentsSchema.validateSync(req.getBody())
+
+    await repository.graduate(values)
+
+    const httpResponse = HttpResponse.updated({
+      message: req.t.success.updated,
+    })
+
+    res.status(httpResponse.statusCode).json(httpResponse)
+  })
+)
+
+route.get(
+  '/:id/academic-history',
+  authorization(),
+  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  asyncHandler(async (req: Request, res: Response) => {
+    const params = req.getParams()
+
+    const data = await repository.getAcademicHistory(params.id)
+
+    const httpResponse = HttpResponse.get({
+      message: req.t.success.retrieved,
       data,
     })
 

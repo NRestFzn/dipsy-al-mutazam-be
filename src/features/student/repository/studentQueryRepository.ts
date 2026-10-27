@@ -41,6 +41,7 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
   public GradeId?: string
   public ClassId?: string
   public nisn?: string
+  public status?: string
 
   constructor(req: Request) {
     super(req)
@@ -50,6 +51,7 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
     this.GradeId = query.GradeId
     this.ClassId = query.ClassId
     this.nisn = query.nisn
+    this.status = query.status || 'aktif'
   }
 
   public queryFilter(): FindOptions {
@@ -70,6 +72,12 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
     if (this.nisn) {
       whereCondition.push({
         nisn: this.nisn,
+      })
+    }
+
+    if (this.status && this.status !== 'semua') {
+      whereCondition.push({
+        studentStatus: this.status,
       })
     }
 
