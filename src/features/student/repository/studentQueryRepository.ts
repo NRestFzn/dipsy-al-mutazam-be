@@ -1,21 +1,21 @@
 import { Request } from 'express'
-import { ResidentDetailQueryFilterDto, ResidentQueryFilterDto } from '../dto'
+import { StudentDetailQueryFilterDto, StudentQueryFilterDto } from '../dto'
 import { FindOptions, WhereOptions, Op } from 'sequelize'
 import { BaseQueryRequest } from '@/routes/version1/request/_baseQueryRequest'
 
-export class ResidentQueryRepository extends BaseQueryRequest {
+export class StudentQueryRepository extends BaseQueryRequest {
   public fullname?: string
 
   constructor(req: Request) {
     super(req)
 
-    const query = req.query as unknown as ResidentQueryFilterDto
+    const query = req.query as unknown as StudentQueryFilterDto
 
     this.fullname = query.fullname
   }
 
   public queryFilter(): FindOptions {
-    const whereCondition: WhereOptions<ResidentQueryFilterDto>[] = []
+    const whereCondition: WhereOptions<StudentQueryFilterDto>[] = []
     if (this.fullname) {
       whereCondition.push({
         fullname: {
@@ -37,41 +37,39 @@ export class ResidentQueryRepository extends BaseQueryRequest {
   }
 }
 
-export class ResidentDetailQueryRepository extends BaseQueryRequest {
-  public RukunWargaId?: string
-  public RukunTetanggaId?: string
-  public nik?: string
+export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
+  public GradeId?: string
+  public ClassId?: string
+  public nisn?: string
 
   constructor(req: Request) {
     super(req)
 
-    const query = req.query as unknown as ResidentDetailQueryFilterDto
+    const query = req.query as any
 
-    this.RukunWargaId = query.RukunWargaId
-    this.RukunTetanggaId = query.RukunTetanggaId
-    this.nik = query.nik
+    this.GradeId = query.GradeId
+    this.ClassId = query.ClassId
+    this.nisn = query.nisn || query.nik
   }
 
   public queryFilter(): FindOptions {
-    const whereCondition: WhereOptions<
-      ResidentDetailQueryFilterDto & { nik: string }
-    >[] = []
+    const whereCondition: WhereOptions<any>[] = []
 
-    if (this.RukunWargaId) {
+    if (this.GradeId) {
       whereCondition.push({
-        RukunWargaId: this.RukunWargaId,
+        GradeId: this.GradeId,
       })
     }
 
-    if (this.RukunTetanggaId) {
+    if (this.ClassId) {
       whereCondition.push({
-        RukunTetanggaId: this.RukunTetanggaId,
+        ClassId: this.ClassId,
       })
     }
 
-    if (this.nik) {
+    if (this.nisn) {
       whereCondition.push({
-        nik: this.nik,
+        nisn: this.nisn,
       })
     }
 

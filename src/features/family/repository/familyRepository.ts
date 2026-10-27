@@ -124,12 +124,12 @@ export class FamilyRepository {
 
   async addMemberByNik(familyId: string, nik: string): Promise<UserDetail> {
     const userDetail = await UserDetail.findOne({
-      where: { nik },
+      where: { nisn: nik },
     })
 
     if (!userDetail)
       throw new ErrorResponse.NotFound(
-        'Penduduk dengan NIK tersebut tidak ditemukan'
+        'Penduduk/siswa dengan NIK/NISN tersebut tidak ditemukan'
       )
 
     await userDetail.update({ FamilyId: familyId })
@@ -141,20 +141,18 @@ export class FamilyRepository {
     formData: RegisterDto
   ): Promise<any> {
     let newUserId: string = ''
+    const nisn = (formData as any).nisn || (formData as any).nik
 
     await db.sequelize!.transaction(async (transaction) => {
       const duplicateNik = await UserDetail.findOne({
-        where: { nik: formData.nik },
+        where: { nisn },
         transaction,
       })
       if (duplicateNik)
         throw new ErrorResponse.BaseResponse('auth.nikUsed', 'Conflict', 409)
 
       if (!formData.email) {
-        formData.email = authRepo.createEmailFromFullnameAndNik(
-          formData.fullname,
-          formData.nik
-        )
+        formData.email = authRepo.createEmailFromNisn(nisn)
       }
 
       const duplicateEmail = await User.findOne({
@@ -188,7 +186,7 @@ export class FamilyRepository {
       await UserDetail.create(
         {
           ...formData,
-          nik: formData.nik,
+          nisn,
           UserId: user.id,
           FamilyId: familyId,
         },

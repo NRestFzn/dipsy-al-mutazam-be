@@ -3,60 +3,42 @@ import User from '@/database/model/user'
 import { db } from '@/database/databaseConnection'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import {
-  ResidentDetailQueryRepository,
-  ResidentQueryRepository,
-} from './residentQueryRepository'
+  StudentDetailQueryFilterRepository,
+  StudentQueryRepository,
+} from './studentQueryRepository'
 import {
-  CreateResidentDto,
-  ResidentDetailDto,
-  ResidentDto,
-  UpdateProfileDto,
-  UpdateResidentDto,
+  CreateStudentDto,
+  StudentDetailDto,
+  StudentDto,
+  UpdateStudentProfileDto,
+  UpdateStudentDto,
 } from '../dto'
 import UserDetail from '@/database/model/userDetail'
-import RukunWarga from '@/database/model/rukunWarga'
-import RukunTetangga from '@/database/model/rukunTetangga'
-import MarriageStatus from '@/database/model/marriageStatus'
-import Education from '@/database/model/education'
-import SalaryRange from '@/database/model/salaryRange'
+import Grade from '@/database/model/grade'
+import Class from '@/database/model/class'
 import { RoleId } from '@/libs/constant/roleIds'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
 import UserHasRoles from '@/database/model/userHasRoles'
 import Role from '@/database/model/role'
 import { AuthRepository } from '../../auth/repository/authRepository'
-import { UserLoginState } from '../../user/dto'
 import { Op } from 'sequelize'
 
 const authRepository = new AuthRepository()
-export class ResidentRepository {
+
+export class StudentRepository {
   async getAll(
     req: Request
-  ): Promise<{ data: ResidentDto[]; meta: { pagination: MetaPaginationDto } }> {
-    const query = new ResidentQueryRepository(req)
-    const residentDetailQuery = new ResidentDetailQueryRepository(req)
+  ): Promise<{ data: StudentDto[]; meta: { pagination: MetaPaginationDto } }> {
+    const query = new StudentQueryRepository(req)
+    const detailQuery = new StudentDetailQueryFilterRepository(req)
 
-    let detailFilter = residentDetailQuery.queryFilter()
+    const detailFilter = detailQuery.queryFilter()
 
-    const userLogin = req.getState('userLoginState') as UserLoginState
-
-    const isKader = userLogin.RoleIds.includes(RoleId.kaderDesa)
-
-    let isDetailRequired = Boolean(
-      residentDetailQuery.RukunWargaId ||
-        residentDetailQuery.RukunTetanggaId ||
-        residentDetailQuery.nik
+    const isDetailRequired = Boolean(
+      detailQuery.GradeId ||
+        detailQuery.ClassId ||
+        detailQuery.nisn
     )
-
-    if (isKader) {
-      const user = await this.getById(userLogin.uid)
-
-      detailFilter.where = {
-        ...detailFilter.where,
-        RukunWargaId: user.userDetail.RukunWargaId,
-      }
-
-      isDetailRequired = true
-    }
 
     const { rows: data, count: totalRows } = await User.findAndCountAll({
       ...query.queryFilter(),
@@ -66,11 +48,12 @@ export class ResidentRepository {
           model: UserDetail,
           ...(detailFilter as any),
           required: isDetailRequired,
+          include: [{ model: Grade }, { model: Class }],
         },
         {
           model: Role,
           where: {
-            id: { [Op.in]: [RoleId.kaderDesa, RoleId.user] },
+            id: { [Op.in]: [RoleId.user] },
           },
           through: { attributes: [] },
         },
@@ -98,20 +81,14 @@ export class ResidentRepository {
     return data
   }
 
-  async getById(id: string): Promise<ResidentDetailDto> {
+  async getById(id: string): Promise<StudentDetailDto> {
     const data = await User.findOne({
       where: { id },
       include: [
         { model: Role, through: { attributes: [] } },
         {
           model: UserDetail,
-          include: [
-            { model: RukunWarga },
-            { model: RukunTetangga },
-            { model: MarriageStatus },
-            { model: Education },
-            { model: SalaryRange },
-          ],
+          include: [{ model: Grade }, { model: Class }],
         },
       ],
     })
@@ -121,27 +98,21 @@ export class ResidentRepository {
     return data
   }
 
-  async getByNik(nik: string): Promise<ResidentDetailDto> {
+  async getByNisn(nisn: string): Promise<StudentDetailDto> {
     const data = await User.findOne({
       include: [
         {
           model: Role,
           where: {
-            id: { [Op.in]: [RoleId.kaderDesa, RoleId.user] },
+            id: { [Op.in]: [RoleId.user] },
           },
           through: { attributes: [] },
         },
         {
           model: UserDetail,
-          where: { nik },
+          where: { nisn },
           required: true,
-          include: [
-            { model: RukunWarga },
-            { model: RukunTetangga },
-            { model: MarriageStatus },
-            { model: Education },
-            { model: SalaryRange },
-          ],
+          include: [{ model: Grade }, { model: Class }],
         },
       ],
     })
@@ -151,21 +122,22 @@ export class ResidentRepository {
     return data
   }
 
-  async add(formData: CreateResidentDto): Promise<void> {
+
+  async add(formData: CreateStudentDto): Promise<void> {
     let data: any
 
-    const duplicateNik = await UserDetail.findOne({
-      where: { nik: formData.nik },
+    const GradeId = formData.GradeId
+    const ClassId = formData.ClassId
+
+    const duplicateNisn = await UserDetail.findOne({
+      where: { nisn: formData.nisn },
     })
 
-    if (duplicateNik)
-      throw new ErrorResponse.BaseResponse('auth.nikUsed', 'Conflict', 409)
+    if (duplicateNisn)
+      throw new ErrorResponse.BaseResponse('auth.nisnUsed', 'Conflict', 409)
 
     if (!formData.email) {
-      formData.email = authRepository.createEmailFromFullnameAndNik(
-        formData.fullname,
-        formData.nik
-      )
+      formData.email = authRepository.createEmailFromNisn(formData.nisn)
     }
 
     const duplicateEmail = await User.findOne({
@@ -187,26 +159,20 @@ export class ResidentRepository {
     await db.sequelize!.transaction(async (transaction) => {
       data = await User.create({ ...formData }, { transaction })
 
-      const userRolesData = [
+      await UserHasRoles.create(
         {
           RoleId: RoleId.user,
           UserId: data.id,
         },
-      ]
-
-      if (formData.isKader) {
-        userRolesData.push({
-          RoleId: RoleId.kaderDesa,
-          UserId: data.id,
-        })
-      }
-
-      await UserHasRoles.bulkCreate(userRolesData, { transaction })
+        { transaction }
+      )
 
       await UserDetail.create(
         {
           ...formData,
-          nik: formData.nik,
+          nisn: formData.nisn,
+          GradeId,
+          ClassId,
           UserId: data.id,
         },
         { transaction }
@@ -214,41 +180,31 @@ export class ResidentRepository {
     })
   }
 
-  async update(id: string, formData: UpdateResidentDto): Promise<void> {
+  async update(id: string, formData: UpdateStudentDto): Promise<void> {
     const data = await this.getByPk(id)
+
+    const GradeId = formData.GradeId
+    const ClassId = formData.ClassId
 
     await db.sequelize!.transaction(async (transaction) => {
       await data.update({ ...formData }, { transaction })
 
       await UserDetail.update(
-        { ...formData, nik: formData.nik },
+        {
+          ...formData,
+          nisn: formData.nisn,
+          GradeId,
+          ClassId,
+        },
         { where: { UserId: data.id }, transaction }
       )
-
-      await UserHasRoles.destroy({
-        where: { UserId: data.id },
-        transaction,
-      })
-
-      const userRolesData = [
-        {
-          RoleId: RoleId.user,
-          UserId: data.id,
-        },
-      ]
-
-      if (formData.isKader) {
-        userRolesData.push({
-          RoleId: RoleId.kaderDesa,
-          UserId: data.id,
-        })
-      }
-
-      await UserHasRoles.bulkCreate(userRolesData, { transaction })
     })
   }
 
-  async updateByToken(id: string, formData: UpdateProfileDto): Promise<void> {
+  async updateByToken(
+    id: string,
+    formData: UpdateStudentProfileDto
+  ): Promise<void> {
     const data = await this.getByPk(id)
 
     await db.sequelize!.transaction(async (transaction) => {

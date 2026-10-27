@@ -1,39 +1,34 @@
-import { ResidentRepository } from '@/features/resident/repository/residentRepository'
+import { StudentRepository } from '@/features/student/repository/studentRepository'
 import { permissionAccess } from '@/middleware/permissionAccess'
 import authorization from '@/middleware/authorization'
 import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
-  ResidentNikQuery,
-  ResidentQuery,
-  createResidentSchema,
-  residentNikQuerySchema,
-  residentQuerySchema,
+  StudentNisnQuery,
+  StudentQuery,
+  createStudentSchema,
+  studentNisnQuerySchema,
+  studentQuerySchema,
   updateProfileSchema,
-  updateResidentSchema,
-} from '@/features/resident/schema'
+  updateStudentSchema,
+} from '@/features/student/schema'
 import asyncHandler from '@/helper/asyncHandler'
 import { RoleId } from '@/libs/constant/roleIds'
-import _ from 'lodash'
 import { UserLoginState } from '@/features/user/dto'
 import { UserRepository } from '@/features/user/repository/userRepository'
 import { Mimetype } from '@/libs/constant/allowedMimetype'
 import { MulterConfig, useMulter } from '@/libs/module/multer'
 import { allowed_image } from '@/libs/constant/allowedExtension'
 
-const repository = new ResidentRepository()
-
+const repository = new StudentRepository()
 const userRepository = new UserRepository()
-
 const route = express.Router()
 
 const mimeType = new Mimetype()
-
 const multerConfig: MulterConfig = {
   allowed_ext: allowed_image,
   allowed_mimetype: mimeType.image,
 }
-
 const uploadFile = useMulter(multerConfig)
 
 route.post(
@@ -43,8 +38,7 @@ route.post(
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
-    const values = createResidentSchema.validateSync(formData)
-
+    const values = createStudentSchema.validateSync(formData)
     const data = await repository.add(values)
 
     const httpResponse = HttpResponse.created({
@@ -77,7 +71,6 @@ route.get(
   authorization(),
   asyncHandler(async (req: Request, res: Response) => {
     const user: UserLoginState = req.getState('userLoginState')
-
     const data = await repository.getById(user.uid)
 
     const httpResponse = HttpResponse.get({
@@ -94,7 +87,6 @@ route.put(
   authorization(),
   asyncHandler(async (req: Request, res: Response) => {
     const user: UserLoginState = req.getState('userLoginState')
-
     const formData = req.getBody()
 
     const value = updateProfileSchema.validateSync(formData, {
@@ -113,15 +105,13 @@ route.put(
 )
 
 route.get(
-  '/by-nik/:nik',
+  '/by-nisn/:nisn',
   authorization(),
   permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: ResidentNikQuery = req.getParams()
-
-    const querySchema = residentNikQuerySchema.validateSync(params)
-
-    const data = await repository.getByNik(querySchema.nik)
+    const params: StudentNisnQuery = req.getParams()
+    const querySchema = studentNisnQuerySchema.validateSync(params)
+    const data = await repository.getByNisn(querySchema.nisn)
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
@@ -132,15 +122,14 @@ route.get(
   })
 )
 
+
 route.get(
   '/:id',
   authorization(),
   permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: ResidentQuery = req.getParams()
-
-    const querySchema = residentQuerySchema.validateSync(params)
-
+    const params: StudentQuery = req.getParams()
+    const querySchema = studentQuerySchema.validateSync(params)
     const data = await repository.getById(querySchema.id)
 
     const httpResponse = HttpResponse.get({
@@ -157,10 +146,8 @@ route.delete(
   authorization(),
   permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    const params: ResidentQuery = req.getParams()
-
-    const querySchema = residentQuerySchema.validateSync(params)
-
+    const params: StudentQuery = req.getParams()
+    const querySchema = studentQuerySchema.validateSync(params)
     const data = await repository.delete(querySchema.id)
 
     const httpResponse = HttpResponse.deleted({
@@ -176,14 +163,11 @@ route.put(
   authorization(),
   permissionAccess([RoleId.adminDesa]),
   asyncHandler(async (req: Request, res: Response) => {
-    let formData = req.getBody()
+    const formData = req.getBody()
 
-    const values = updateResidentSchema.validateSync(formData)
-
-    const params: ResidentQuery = req.getParams()
-
-    const querySchema = residentQuerySchema.validateSync(params)
-
+    const values = updateStudentSchema.validateSync(formData)
+    const params: StudentQuery = req.getParams()
+    const querySchema = studentQuerySchema.validateSync(params)
     const data = await repository.update(querySchema.id, values)
 
     const httpResponse = HttpResponse.updated({
@@ -201,9 +185,7 @@ route.put(
   uploadFile.single('profilePicture'),
   asyncHandler(async (req: Request, res: Response) => {
     const user: UserLoginState = req.getState('userLoginState')
-
     const file = req.file as Express.Multer.File
-
     const data = await userRepository.updateProfilePict(user.uid, file.filename)
 
     const httpResponse = HttpResponse.updated({
@@ -215,4 +197,4 @@ route.put(
   })
 )
 
-export { route as ResidentController }
+export { route as StudentController }
