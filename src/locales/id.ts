@@ -26,9 +26,11 @@ const id: Translation = {
 
   auth: {
     loginFailed: 'Email atau kata sandi salah',
-    loginNikFailed: 'NIk atau kata sandi salah',
+    loginNikFailed: 'NISN/NIK atau kata sandi salah',
+    loginNisnFailed: 'NISN atau kata sandi salah',
     emailUsed: 'Email sudah terdaftar',
     nikUsed: 'NIK sudah terdaftar',
+    nisnUsed: 'NISN sudah terdaftar',
     phoneUsed: 'Nomor telepon sudah terdaftar',
     loginSuccess: 'Login berhasil',
     registerSuccess: 'Pengguna berhasil didaftarkan',
@@ -96,6 +98,9 @@ const id: Translation = {
   attributes: {
     fullname: 'Nama Lengkap',
     nik: 'Nomor Induk Kependudukan (NIK)',
+    nisn: 'Nomor Induk Siswa Nasional (NISN)',
+    GradeId: 'Tingkat',
+    ClassId: 'Kelas',
     email: 'Alamat Email',
     phoneNumber: 'Nomor Telepon',
     password: 'Kata Sandi',
