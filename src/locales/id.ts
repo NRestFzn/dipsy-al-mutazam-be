@@ -36,26 +36,6 @@ const id: Translation = {
     registerSuccess: 'Pengguna berhasil didaftarkan',
   },
 
-  odgjResident: {
-    retrieved: 'Data warga ODGJ berhasil diambil',
-    created: 'Warga ODGJ berhasil ditambahkan',
-    updated: 'Data warga ODGJ berhasil diperbarui',
-    deleted: 'Data warga ODGJ berhasil dihapus',
-    notFound: 'Data warga ODGJ tidak ditemukan',
-    duplicate: 'Warga sudah terdaftar sebagai ODGJ',
-    residentNotFound: 'Warga tidak ditemukan',
-    scheduleCreated: 'Jadwal pemeriksaan berhasil ditambahkan',
-    recurringSchedulesCreated:
-      'Jadwal pemeriksaan berulang berhasil ditambahkan',
-    scheduleUpdated: 'Jadwal pemeriksaan berhasil diperbarui',
-    scheduleDeleted: 'Jadwal pemeriksaan berhasil dihapus',
-    scheduleNotFound: 'Jadwal pemeriksaan tidak ditemukan',
-    recurrenceCountMin:
-      'Jadwal pemeriksaan berulang memerlukan minimal 2 pertemuan',
-    recurrenceCountMax:
-      'Jadwal pemeriksaan berulang tidak boleh melebihi 120 pertemuan',
-  },
-
 
   user: {
     notFound: 'Pengguna tidak ditemukan',

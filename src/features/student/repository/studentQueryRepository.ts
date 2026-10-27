@@ -49,7 +49,7 @@ export class StudentDetailQueryFilterRepository extends BaseQueryRequest {
 
     this.GradeId = query.GradeId
     this.ClassId = query.ClassId
-    this.nisn = query.nisn || query.nik
+    this.nisn = query.nisn
   }
 
   public queryFilter(): FindOptions {

@@ -23,10 +23,8 @@ export interface StudentDetailDto extends StudentDto {
     birthDate: Date
     GradeId?: string | null
     ClassId?: string | null
-    FamilyId?: string | null
     grade?: any
     class?: any
-    family?: any
   }
 }
 
