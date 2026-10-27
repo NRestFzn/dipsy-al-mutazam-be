@@ -35,6 +35,10 @@ export const summarizeByGradeIdQuery = summarizeByQuestionnaireIdQuery.shape({
 export const summarizeByClassIdQuery = summarizeByQuestionnaireIdQuery.shape({
   GradeId: yup.string().optional(),
   ClassId: yup.string().required('validation.required'),
+  academicYear: yup
+    .string()
+    .optional()
+    .matches(/^\d{4}\/\d{4}$/, 'validation.academicYear'),
 })
 
 export const summarizeByStudentIdQuery = summarizeByQuestionnaireIdQuery.shape({
