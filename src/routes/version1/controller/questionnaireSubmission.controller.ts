@@ -28,6 +28,7 @@ import {
 import User from '@/database/model/user'
 import UserDetail from '@/database/model/userDetail'
 import Class from '@/database/model/class'
+import StudentClassHistory from '@/database/model/studentClassHistory'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import { RoleId } from '@/libs/constant/roleIds'
 import { UserLoginState } from '@/features/user/dto'
@@ -135,22 +136,40 @@ route.get(
 
     let targetClassId = query.ClassId
 
-    // If request is from Wali Kelas (and not Guru BK), restrict to their assigned class
+    // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
     if (
       user.RoleIds.includes(RoleId.walikelas) &&
       !user.RoleIds.includes(RoleId.gurubk)
     ) {
-      const assignedClass = await Class.findOne({
-        where: { homeroomTeacherId: user.uid },
-      })
+      if (query.academicYear) {
+        const taught = await StudentClassHistory.findOne({
+          where: {
+            homeroomTeacherId: user.uid,
+            academicYear: query.academicYear,
+            ClassId: query.ClassId,
+          },
+        })
 
-      if (!assignedClass) {
-        throw new ErrorResponse.Forbidden(
-          'Anda tidak terdaftar sebagai wali kelas'
-        )
+        if (!taught) {
+          throw new ErrorResponse.Forbidden(
+            'Anda tidak mengampu kelas ini pada tahun ajaran tersebut'
+          )
+        }
+
+        targetClassId = query.ClassId
+      } else {
+        const assignedClass = await Class.findOne({
+          where: { homeroomTeacherId: user.uid },
+        })
+
+        if (!assignedClass) {
+          throw new ErrorResponse.Forbidden(
+            'Anda tidak terdaftar sebagai wali kelas'
+          )
+        }
+
+        targetClassId = assignedClass.id
       }
-
-      targetClassId = assignedClass.id
     }
 
     const options: IGetSummaryOptionsByClass = {
@@ -190,17 +209,20 @@ route.get(
         where: { homeroomTeacherId: user.uid },
       })
 
-      if (!assignedClass) {
-        throw new ErrorResponse.Forbidden(
-          'Anda tidak terdaftar sebagai wali kelas'
-        )
-      }
+      const taughtHistory = await StudentClassHistory.findOne({
+        where: { UserId: query.UserId, homeroomTeacherId: user.uid },
+      })
 
       const studentDetail = await UserDetail.findOne({
         where: { UserId: query.UserId },
       })
 
-      if (!studentDetail || studentDetail.ClassId !== assignedClass.id) {
+      const isCurrentClass =
+        !!assignedClass &&
+        !!studentDetail &&
+        studentDetail.ClassId === assignedClass.id
+
+      if (!isCurrentClass && !taughtHistory) {
         throw new ErrorResponse.Forbidden('Siswa bukan anggota kelas Anda')
       }
     }

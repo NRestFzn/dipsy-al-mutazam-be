@@ -168,7 +168,8 @@ export class QuestionnaireSubmissionRepository {
       WHEN ds.trueCount >= (select riskThreshold FROM questionnaires where id = :QuestionnaireId) THEN 1
       ELSE 0
     END AS healthStatus
-    FROM user_details ud LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId)
+    FROM user_details ud LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId
+    WHERE ud.studentStatus = 'aktif')
     
     SELECT g.name AS gradeName, g.id as gradeId, g.level as gradeLevel,
     CAST(COALESCE(gcc.totalClass, 0) AS SIGNED) AS classCount,
@@ -178,7 +179,7 @@ export class QuestionnaireSubmissionRepository {
     CAST(SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) AS SIGNED) AS unStableMentalCount,
     CAST(COALESCE((SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100) / NULLIF(COUNT(ums.UserId), 0),0) AS UNSIGNED) AS unStableMentalPercentage
     FROM grades g
-    LEFT JOIN user_details ud ON ud.GradeId = g.id
+    LEFT JOIN user_details ud ON ud.GradeId = g.id AND ud.studentStatus = 'aktif'
     LEFT JOIN (SELECT UserId, GradeId, healthStatus
     FROM UserMentalState
     WHERE healthStatus IS NOT NULL OR EXISTS (SELECT 1 FROM UnstableMentalScore WHERE UnstableMentalScore.UserId = UserMentalState.UserId)) ums ON ud.UserId = ums.UserId
@@ -271,7 +272,7 @@ export class QuestionnaireSubmissionRepository {
       c.GradeId,
       COUNT(ud.UserId) AS userCount
     FROM classes c
-    LEFT JOIN user_details ud ON ud.ClassId = c.id
+    LEFT JOIN user_details ud ON ud.ClassId = c.id AND ud.studentStatus = 'aktif'
     WHERE c.GradeId = :GradeId
     GROUP BY c.id, c.GradeId),
     
@@ -310,7 +311,8 @@ export class QuestionnaireSubmissionRepository {
         ELSE 0
       END AS healthStatus
     FROM user_details ud
-    LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId)
+    LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId
+    WHERE ud.studentStatus = 'aktif')
 
     SELECT
     c.name AS className, c.id as classId,
@@ -387,7 +389,16 @@ export class QuestionnaireSubmissionRepository {
   async summarizeByClassId(
     options: IGetSummaryOptionsByClass
   ): Promise<ISummarizeByClassIdDetailed> {
-    const { startDate, endDate } = options
+    const { startDate, endDate, academicYear } = options
+
+    let effectiveStartDate: any = startDate
+    let effectiveEndDate: any = endDate
+
+    if (academicYear && !startDate && !endDate) {
+      const [firstYear, secondYear] = academicYear.split('/')
+      effectiveStartDate = `${firstYear}-07-01`
+      effectiveEndDate = `${secondYear}-06-30`
+    }
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
@@ -400,21 +411,37 @@ export class QuestionnaireSubmissionRepository {
       ClassId: cls.id,
     }
 
+    if (academicYear) replacements.academicYear = academicYear
+
     let dateFilter = ''
-    if (startDate && endDate) {
+    if (effectiveStartDate && effectiveEndDate) {
       dateFilter = 'AND DATE(qs.createdAt) BETWEEN :startDate AND :endDate'
-      replacements.startDate = startDate
-      replacements.endDate = endDate
-    } else if (startDate) {
+      replacements.startDate = effectiveStartDate
+      replacements.endDate = effectiveEndDate
+    } else if (effectiveStartDate) {
       dateFilter = 'AND DATE(qs.createdAt) >= :startDate'
-      replacements.startDate = startDate
-    } else if (endDate) {
+      replacements.startDate = effectiveStartDate
+    } else if (effectiveEndDate) {
       dateFilter = 'AND DATE(qs.createdAt) <= :endDate'
-      replacements.endDate = endDate
+      replacements.endDate = effectiveEndDate
     }
 
+    const scopeCte = academicYear
+      ? `UserScope AS (
+          SELECT h.UserId, h.ClassId
+          FROM student_class_histories h
+          WHERE h.academicYear = :academicYear
+        ),
+      `
+      : `UserScope AS (
+          SELECT ud.UserId, ud.ClassId
+          FROM user_details ud
+          WHERE ud.studentStatus = 'aktif'
+        ),
+      `
+
     const query = `
-      WITH LatestSubmissionsInRange AS (
+      WITH ${scopeCte}LatestSubmissionsInRange AS (
         SELECT
           qs.id,
           qs.UserId,
@@ -437,19 +464,18 @@ export class QuestionnaireSubmissionRepository {
 
       UserMentalState AS (
         SELECT
-          ud.id,
           u.id as UserId,
           u.fullname,
-          ud.ClassId,
+          sc.ClassId,
           ds.submissionDate AS lastSubmissionDate,
           CASE
             WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
             WHEN ds.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
             ELSE 0
           END AS isMentalUnStable
-        FROM user_details ud
-        INNER JOIN users u on ud.UserId = u.id
-        JOIN UnstableMentalScore ds ON ds.UserId = ud.UserId
+        FROM UserScope sc
+        INNER JOIN users u on sc.UserId = u.id
+        JOIN UnstableMentalScore ds ON ds.UserId = sc.UserId
       )
 
       SELECT

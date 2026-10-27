@@ -72,6 +72,7 @@ export interface IGetSummaryOptionsByGrade extends IGetSummaryOptions {
 export interface IGetSummaryOptionsByClass extends IGetSummaryOptions {
   GradeId?: string
   ClassId: string
+  academicYear?: string
 }
 
 export interface IGetSummaryOptionsByStudent extends IGetSummaryOptions {
