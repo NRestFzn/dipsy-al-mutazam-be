@@ -6,28 +6,26 @@ import {
   createQuestionnaireSubmissionSchema,
   submissionParams,
   SubmissionParams,
-  SummarizeByClassIdQuery,
-  summarizeByClassIdQuery,
-  SummarizeByGradeIdQuery,
-  summarizeByGradeIdQuery,
   SummarizeByQuestionnaireIdParams,
   SummarizeByQuestionnaireIdQuery,
-  summarizeByQuestionnaireIdQuery,
-  SummarizeByStudentIdQuery,
-  summarizeByStudentIdQuery,
+  summarizeByRtIdQuery,
+  SummarizeByRtIdQuery,
+  summarizeByRwIdQuery,
+  SummarizeByRwIdQuery,
+  summarizeByUserIdQuery,
+  SummarizeByUserIdQuery,
 } from '@/features/questionnaireSubmission/schema'
 import asyncHandler from '@/helper/asyncHandler'
 import _ from 'lodash'
 import {
   CreateQuestionnaireSubmissionDto,
   IGetSummaryOptions,
-  IGetSummaryOptionsByClass,
-  IGetSummaryOptionsByGrade,
-  IGetSummaryOptionsByStudent,
+  IGetSummaryOptionsByRt,
+  IGetSummaryOptionsByRw,
+  IGetSummaryOptionsByUser,
 } from '@/features/questionnaireSubmission/dto'
 import User from '@/database/model/user'
 import UserDetail from '@/database/model/userDetail'
-import Class from '@/database/model/class'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import { RoleId } from '@/libs/constant/roleIds'
 import { UserLoginState } from '@/features/user/dto'
@@ -40,7 +38,6 @@ const route = express.Router()
 route.get(
   '/history-me',
   authorization(),
-  permissionAccess([RoleId.siswa]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAllSubmissionByLoggedInUser(req)
 
@@ -56,7 +53,6 @@ route.get(
 route.get(
   '/history-submitted',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAllSubmissionBySubmitter(req)
 
@@ -72,7 +68,6 @@ route.get(
 route.get(
   '/summary/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
 
@@ -95,22 +90,21 @@ route.get(
 )
 
 route.get(
-  '/summary-grade/:QuestionnaireId',
+  '/summary-rw/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
 
-    const query: SummarizeByGradeIdQuery = summarizeByGradeIdQuery.validateSync(
+    const query: SummarizeByRwIdQuery = summarizeByRwIdQuery.validateSync(
       req.query
     )
 
-    const options: IGetSummaryOptionsByGrade = {
+    const options: IGetSummaryOptionsByRw = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
     }
 
-    const data = await repository.summarizeByGradeId(options)
+    const data = await repository.summarizeByRwId(options)
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
@@ -122,44 +116,21 @@ route.get(
 )
 
 route.get(
-  '/summary-class/:QuestionnaireId',
+  '/summary-rt/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
-    const user: UserLoginState = req.getState('userLoginState')
 
-    const query: SummarizeByClassIdQuery = summarizeByClassIdQuery.validateSync(
+    const query: SummarizeByRtIdQuery = summarizeByRtIdQuery.validateSync(
       req.query
     )
 
-    let targetClassId = query.ClassId
-
-    // If request is from Wali Kelas (and not Guru BK), restrict to their assigned class
-    if (
-      user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
-    ) {
-      const assignedClass = await Class.findOne({
-        where: { homeroomTeacherId: user.uid },
-      })
-
-      if (!assignedClass) {
-        throw new ErrorResponse.Forbidden(
-          'Anda tidak terdaftar sebagai wali kelas'
-        )
-      }
-
-      targetClassId = assignedClass.id
-    }
-
-    const options: IGetSummaryOptionsByClass = {
+    const options: IGetSummaryOptionsByRt = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
-      ClassId: targetClassId,
     }
 
-    const data = await repository.summarizeByClassId(options)
+    const data = await repository.summarizeByRtId(options)
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
@@ -171,41 +142,16 @@ route.get(
 )
 
 route.get(
-  '/summary-student/:QuestionnaireId',
+  '/summary-user/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
-    const user: UserLoginState = req.getState('userLoginState')
 
-    const query: SummarizeByStudentIdQuery =
-      summarizeByStudentIdQuery.validateSync(req.query)
+    const query: SummarizeByUserIdQuery = summarizeByUserIdQuery.validateSync(
+      req.query
+    )
 
-    // If request is from Wali Kelas (and not Guru BK), verify student is in their class
-    if (
-      user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
-    ) {
-      const assignedClass = await Class.findOne({
-        where: { homeroomTeacherId: user.uid },
-      })
-
-      if (!assignedClass) {
-        throw new ErrorResponse.Forbidden(
-          'Anda tidak terdaftar sebagai wali kelas'
-        )
-      }
-
-      const studentDetail = await UserDetail.findOne({
-        where: { UserId: query.UserId },
-      })
-
-      if (!studentDetail || studentDetail.ClassId !== assignedClass.id) {
-        throw new ErrorResponse.Forbidden('Siswa bukan anggota kelas Anda')
-      }
-    }
-
-    const options: IGetSummaryOptionsByStudent = {
+    const options: IGetSummaryOptionsByUser = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
     }
@@ -224,20 +170,31 @@ route.get(
 route.get(
   '/summary-me/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.siswa]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
-    const user: UserLoginState = req.getState('userLoginState')
 
-    const options: IGetSummaryOptionsByStudent = {
+    const user = await User.findByPk(req.getState('userLoginState').uid, {
+      include: [{ model: UserDetail }],
+    })
+
+    if (!user) {
+      throw new ErrorResponse.NotFound(req.t.user.notFound)
+    }
+
+    if (!user.userDetail) {
+      throw new ErrorResponse.BadRequest(req.t.user.inCompleteDetail)
+    }
+
+    const query: SummarizeByUserIdQuery = summarizeByUserIdQuery.validateSync({
+      ...req.query,
+      UserId: user.id,
+      RukunTetanggaId: user.userDetail.RukunTetanggaId,
+      RukunWargaId: user.userDetail.RukunWargaId,
+    })
+
+    const options: IGetSummaryOptionsByUser = {
       QuestionnaireId: params.QuestionnaireId,
-      UserId: user.uid,
-      startDate: req.query.startDate
-        ? new Date(req.query.startDate as string)
-        : undefined,
-      endDate: req.query.endDate
-        ? new Date(req.query.endDate as string)
-        : undefined,
+      ...query,
     }
 
     const data = await repository.summarizeByUserId(options)
@@ -280,25 +237,27 @@ route.post(
 
     const activeRoleId = req.header('x-active-role')
 
-    const isTeacher =
-      (activeRoleId === RoleId.gurubk &&
-        user.RoleIds.includes(RoleId.gurubk)) ||
-      (activeRoleId === RoleId.walikelas &&
-        user.RoleIds.includes(RoleId.walikelas))
+    const isKaderDesa =
+      activeRoleId === RoleId.kaderDesa &&
+      user.RoleIds.includes(RoleId.kaderDesa)
 
-    const isAssisted = isTeacher
+    const isKepalaKeluarga =
+      activeRoleId === RoleId.kepalaKeluarga &&
+      user.RoleIds.includes(RoleId.kepalaKeluarga)
+
+    const isAssisted = isKaderDesa || isKepalaKeluarga
 
     const newFormData: CreateQuestionnaireSubmissionDto = {
       UserId: isAssisted ? formData.UserId : user.uid,
       QuestionnaireId: params.questionnaireId,
       answers: formData.answers,
-      isAssisted,
+      isAssisted: isAssisted,
       SubmittedBy: user.uid,
     }
 
     const values = createQuestionnaireSubmissionSchema.validateSync(newFormData)
 
-    const data = await repository.add(values)
+    const data = await repository.add(newFormData)
 
     const httpResponse = HttpResponse.created({
       message: req.t.success.created,

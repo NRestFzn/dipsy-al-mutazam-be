@@ -26,11 +26,9 @@ const id: Translation = {
 
   auth: {
     loginFailed: 'Email atau kata sandi salah',
-    loginNikFailed: 'NISN atau kata sandi salah',
-    loginNisnFailed: 'NISN atau kata sandi salah',
+    loginNikFailed: 'NIk atau kata sandi salah',
     emailUsed: 'Email sudah terdaftar',
-    nikUsed: 'NISN sudah terdaftar',
-    nisnUsed: 'NISN sudah terdaftar',
+    nikUsed: 'NIK sudah terdaftar',
     phoneUsed: 'Nomor telepon sudah terdaftar',
     loginSuccess: 'Login berhasil',
     registerSuccess: 'Pengguna berhasil didaftarkan',
@@ -41,30 +39,6 @@ const id: Translation = {
     profileUpdated: 'Profil berhasil diperbarui',
     profilePictureUpdated: 'Foto profil berhasil diperbarui',
     inCompleteDetail: 'Pengguna belum mengisi data lengkap',
-  },
-
-  student: {
-    retrieved: 'Data siswa berhasil diambil',
-    created: 'Data siswa berhasil dibuat',
-    updated: 'Data siswa berhasil diperbarui',
-    deleted: 'Data siswa berhasil dihapus',
-    notFound: 'Data siswa tidak ditemukan',
-  },
-
-  grade: {
-    retrieved: 'Data tingkat berhasil diambil',
-    created: 'Data tingkat berhasil dibuat',
-    updated: 'Data tingkat berhasil diperbarui',
-    deleted: 'Data tingkat berhasil dihapus',
-    notFound: 'Data tingkat tidak ditemukan',
-  },
-
-  class: {
-    retrieved: 'Data kelas berhasil diambil',
-    created: 'Data kelas berhasil dibuat',
-    updated: 'Data kelas berhasil diperbarui',
-    deleted: 'Data kelas berhasil dihapus',
-    notFound: 'Data kelas tidak ditemukan',
   },
 
   questionnaire: {
@@ -86,6 +60,26 @@ const id: Translation = {
       'Pertanyaan dengan id {id} bukan bagian dari kuesioner ini',
   },
 
+  odgjResident: {
+    retrieved: 'Data warga ODGJ berhasil diambil',
+    created: 'Warga ODGJ berhasil ditambahkan',
+    updated: 'Data warga ODGJ berhasil diperbarui',
+    deleted: 'Data warga ODGJ berhasil dihapus',
+    notFound: 'Data warga ODGJ tidak ditemukan',
+    duplicate: 'Warga sudah terdaftar sebagai ODGJ',
+    residentNotFound: 'Warga tidak ditemukan',
+    scheduleCreated: 'Jadwal pemeriksaan berhasil ditambahkan',
+    recurringSchedulesCreated:
+      'Jadwal pemeriksaan berulang berhasil ditambahkan',
+    scheduleUpdated: 'Jadwal pemeriksaan berhasil diperbarui',
+    scheduleDeleted: 'Jadwal pemeriksaan berhasil dihapus',
+    scheduleNotFound: 'Jadwal pemeriksaan tidak ditemukan',
+    recurrenceCountMin:
+      'Jadwal pemeriksaan berulang memerlukan minimal 2 pertemuan',
+    recurrenceCountMax:
+      'Jadwal pemeriksaan berulang tidak boleh melebihi 120 pertemuan',
+  },
+
   validation: {
     required: '{field} wajib diisi',
     email: 'Format {field} tidak valid',
@@ -101,20 +95,19 @@ const id: Translation = {
 
   attributes: {
     fullname: 'Nama Lengkap',
-    nisn: 'Nomor Induk Siswa Nasional (NISN)',
-    nis: 'Nomor Induk Siswa (NIS)',
-    GradeId: 'Tingkat',
-    ClassId: 'Kelas',
-    entryYear: 'Tahun Masuk',
-    academicYear: 'Tahun Ajaran',
-    homeroomTeacherId: 'Wali Kelas',
+    nik: 'Nomor Induk Kependudukan (NIK)',
     email: 'Alamat Email',
     phoneNumber: 'Nomor Telepon',
     password: 'Kata Sandi',
     confirmPassword: 'Konfirmasi Kata Sandi',
-    confirmNewPassword: 'Konfirmasi Kata Sandi Baru',
     gender: 'Jenis Kelamin',
     birthDate: 'Tanggal Lahir',
+    profession: 'Pekerjaan',
+    RukunWargaId: 'Rukun Warga',
+    RukunTetanggaId: 'Rukun Tetangga',
+    MarriageStatusId: 'Status Pernikahan',
+    EducationId: 'Pendidikan Terakhir',
+    SalaryRangeId: 'Rentang Gaji',
     title: 'Judul',
     description: 'Deskripsi',
     status: 'Status',
@@ -138,9 +131,15 @@ const id: Translation = {
     answerValue: 'Jawaban',
     startDate: 'Tanggal Mulai',
     endDate: 'Tanggal Selesai',
+    isKader: 'Status Kader',
+    confirmNewPassword: 'Konfirmasi Kata Sandi Baru',
     count: 'Jumlah',
     name: 'Nama',
+    examinationDate: 'Tanggal Pemeriksaan',
     notes: 'Catatan',
+    scheduleId: 'ID Jadwal',
+    recurrenceType: 'Pola Pengulangan',
+    recurrenceCount: 'Jumlah Pertemuan',
   },
 }
 
