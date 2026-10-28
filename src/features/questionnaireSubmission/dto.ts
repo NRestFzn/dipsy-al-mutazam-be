@@ -63,6 +63,8 @@ export interface IGetSummaryOptions {
   QuestionnaireId: string
   startDate?: Date
   endDate?: Date
+  academicYear?: string
+  assignedClassIds?: string[]
 }
 
 export interface IGetSummaryOptionsByGrade extends IGetSummaryOptions {
@@ -96,16 +98,19 @@ export interface ISummarizeSubmissionByStudent {
 }
 
 export interface ISummarizeByQuestionnaireIdDetailed {
+  hasAssignment?: boolean
   summarize: ISummarize
   perGrade: (ISummarize & ISummarizePerGrade)[]
 }
 
 export interface ISummarizeByGradeIdDetailed {
+  hasAssignment?: boolean
   summarize: ISummarize
   perClass: (ISummarize & ISummarizeByGradeId)[]
 }
 
 export interface ISummarizeByClassIdDetailed {
+  hasAssignment?: boolean
   summarize: ISummarize
   students: ISummarizeStudentByClass[]
 }

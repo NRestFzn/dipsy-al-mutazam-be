@@ -26,6 +26,11 @@ export const summarizeByQuestionnaireIdParams = yup.object().shape({
 export const summarizeByQuestionnaireIdQuery = yup.object().shape({
   startDate: yup.date().optional(),
   endDate: yup.date().optional(),
+  academicYear: yup
+    .string()
+    .transform((val) => (val === '' ? undefined : val))
+    .optional()
+    .matches(/^\d{4}\/\d{4}$/, 'validation.academicYear'),
 })
 
 export const summarizeByGradeIdQuery = summarizeByQuestionnaireIdQuery.shape({
@@ -35,10 +40,6 @@ export const summarizeByGradeIdQuery = summarizeByQuestionnaireIdQuery.shape({
 export const summarizeByClassIdQuery = summarizeByQuestionnaireIdQuery.shape({
   GradeId: yup.string().optional(),
   ClassId: yup.string().required('validation.required'),
-  academicYear: yup
-    .string()
-    .optional()
-    .matches(/^\d{4}\/\d{4}$/, 'validation.academicYear'),
 })
 
 export const summarizeByStudentIdQuery = summarizeByQuestionnaireIdQuery.shape({
