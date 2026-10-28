@@ -9,6 +9,13 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
+  const [existing]: any = await queryInterface.sequelize.query(
+    `SELECT id FROM questionnaires WHERE title = 'Self-Reporting Questionnaire' LIMIT 1`
+  )
+  if (existing && existing.length > 0) {
+    return
+  }
+
   const questionnaireId = v4()
   const questionnaireCategoryId = v4()
 
