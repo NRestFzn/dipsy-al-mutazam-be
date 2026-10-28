@@ -36,7 +36,7 @@ const uploadFile = useMulter(multerConfig)
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
@@ -55,7 +55,7 @@ route.post(
 route.get(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAll(req)
 
@@ -109,7 +109,7 @@ route.put(
 route.get(
   '/by-nisn/:nisn',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: StudentNisnQuery = req.getParams()
     const querySchema = studentNisnQuerySchema.validateSync(params)
@@ -128,13 +128,16 @@ route.get(
 route.get(
   '/taught-history',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const user: UserLoginState = req.getState('userLoginState')
     const query = req.query as any
 
+    const canInspectTeacher =
+      user.RoleIds.includes(RoleId.tu) || user.RoleIds.includes(RoleId.gurubk)
+
     const teacherId =
-      user.RoleIds.includes(RoleId.gurubk) && query.TeacherId
+      canInspectTeacher && query.TeacherId
         ? String(query.TeacherId)
         : user.uid
 
@@ -152,7 +155,7 @@ route.get(
 route.get(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: StudentQuery = req.getParams()
     const querySchema = studentQuerySchema.validateSync(params)
@@ -170,7 +173,7 @@ route.get(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: StudentQuery = req.getParams()
     const querySchema = studentQuerySchema.validateSync(params)
@@ -187,7 +190,7 @@ route.delete(
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
@@ -226,7 +229,7 @@ route.put(
 route.post(
   '/promotion',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const values = promoteStudentsSchema.validateSync(req.getBody())
 
@@ -243,7 +246,7 @@ route.post(
 route.post(
   '/graduation',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const values = graduateStudentsSchema.validateSync(req.getBody())
 
@@ -260,7 +263,7 @@ route.post(
 route.get(
   '/:id/academic-history',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = req.getParams()
 

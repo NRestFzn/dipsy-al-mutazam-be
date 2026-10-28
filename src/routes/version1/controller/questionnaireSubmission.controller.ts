@@ -57,7 +57,7 @@ route.get(
 route.get(
   '/history-submitted',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await repository.getAllSubmissionBySubmitter(req)
 
@@ -73,7 +73,7 @@ route.get(
 route.get(
   '/summary/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu, RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
 
@@ -98,7 +98,7 @@ route.get(
 route.get(
   '/summary-grade/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu, RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
 
@@ -125,7 +125,7 @@ route.get(
 route.get(
   '/summary-class/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
     const user: UserLoginState = req.getState('userLoginState')
@@ -139,7 +139,8 @@ route.get(
     // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
     if (
       user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
     ) {
       if (query.academicYear) {
         const taught = await StudentClassHistory.findOne({
@@ -192,7 +193,7 @@ route.get(
 route.get(
   '/summary-student/:QuestionnaireId',
   authorization(),
-  permissionAccess([RoleId.gurubk, RoleId.walikelas]),
+  permissionAccess([RoleId.tu, RoleId.gurubk, RoleId.walikelas]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
     const user: UserLoginState = req.getState('userLoginState')
@@ -200,10 +201,11 @@ route.get(
     const query: SummarizeByStudentIdQuery =
       summarizeByStudentIdQuery.validateSync(req.query)
 
-    // If request is from Wali Kelas (and not Guru BK), verify student is in their class
+    // If request is from Wali Kelas (and not Guru BK or TU), verify student is in their class
     if (
       user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
     ) {
       const assignedClass = await Class.findOne({
         where: { homeroomTeacherId: user.uid },
@@ -303,6 +305,8 @@ route.post(
     const activeRoleId = req.header('x-active-role')
 
     const isTeacher =
+      (activeRoleId === RoleId.tu &&
+        user.RoleIds.includes(RoleId.tu)) ||
       (activeRoleId === RoleId.gurubk &&
         user.RoleIds.includes(RoleId.gurubk)) ||
       (activeRoleId === RoleId.walikelas &&
