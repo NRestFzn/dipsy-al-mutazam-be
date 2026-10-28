@@ -20,14 +20,6 @@ export async function up(
   const now = new Date()
   const defaultPasswordHash = await hashing.hash(env.APP_DEFAULT_PASS)
 
-  // Check if realistic seeder has already completed by checking for the last seeded student
-  const [existingSeedStudent]: any = await queryInterface.sequelize.query(
-    `SELECT id FROM user_details WHERE nisn = '0084010042' LIMIT 1`
-  )
-  if (existingSeedStudent && existingSeedStudent.length > 0) {
-    return
-  }
-
   // 1. Fetch Grades
   const [gradeRows]: any = await queryInterface.sequelize.query(
     `SELECT id, name, level FROM grades`
@@ -219,7 +211,7 @@ export async function up(
     {
       email: 'gurubk@al-multazam.sch.id',
       academicYear: '2025/2026',
-      classNames: ['X-A', 'X-B', 'XI-A', 'XII-A', 'VII-A', 'IX-A'],
+      classNames: ['VII-A', 'VIII-A', 'IX-A', 'X-A', 'X-B', 'XI-A', 'XII-A'],
     },
     {
       email: 'gurubk@al-multazam.sch.id',
@@ -273,6 +265,13 @@ export async function up(
   }
 
   // 5. Seed Realistic Students across Classes + Alumni + Transferred + Class History
+  const [existingSeedStudent]: any = await queryInterface.sequelize.query(
+    `SELECT id FROM user_details WHERE nisn = '0084010042' LIMIT 1`
+  )
+  if (existingSeedStudent && existingSeedStudent.length > 0) {
+    return
+  }
+
   interface SeedStudentSpec {
     nisn: string
     nis: string

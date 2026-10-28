@@ -142,20 +142,50 @@ export class ClassRepository {
       assignmentByClassId.set(assignment.ClassId, assignment)
     }
 
-    const data: ClassDto[] = rows.map((row) => {
-      const json: any = row.toJSON()
-      const assignment = assignmentByClassId.get(row.id)
-      const teacher = assignment?.teacher
-        ? (assignment.teacher.toJSON() as any)
-        : null
+    const gradeOrderMap: Record<string, number> = {
+      VII: 7,
+      '7': 7,
+      VIII: 8,
+      '8': 8,
+      IX: 9,
+      '9': 9,
+      X: 10,
+      '10': 10,
+      XI: 11,
+      '11': 11,
+      XII: 12,
+      '12': 12,
+    }
 
-      return {
-        ...json,
-        academicYear,
-        homeroomTeacherId: assignment?.UserId ?? null,
-        homeroomTeacher: teacher,
-      }
-    })
+    const data: ClassDto[] = rows
+      .map((row) => {
+        const json: any = row.toJSON()
+        const assignment = assignmentByClassId.get(row.id)
+        const teacher = assignment?.teacher
+          ? (assignment.teacher.toJSON() as any)
+          : null
+
+        return {
+          ...json,
+          academicYear,
+          homeroomTeacherId: assignment?.UserId ?? null,
+          homeroomTeacher: teacher,
+        }
+      })
+      .sort((a: any, b: any) => {
+        const gA = String(a.grade?.name || '')
+          .toUpperCase()
+          .replace('KELAS ', '')
+          .trim()
+        const gB = String(b.grade?.name || '')
+          .toUpperCase()
+          .replace('KELAS ', '')
+          .trim()
+        const rA = gradeOrderMap[gA] ?? 99
+        const rB = gradeOrderMap[gB] ?? 99
+        if (rA !== rB) return rA - rB
+        return String(a.name || '').localeCompare(String(b.name || ''))
+      })
 
     const countCondition = query.GradeId ? { GradeId: query.GradeId } : {}
     const dataCount = await Class.count({ where: countCondition })

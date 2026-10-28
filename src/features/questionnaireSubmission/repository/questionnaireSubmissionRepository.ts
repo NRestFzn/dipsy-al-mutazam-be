@@ -199,6 +199,11 @@ export class QuestionnaireSubmissionRepository {
           WHERE ud.studentStatus = 'aktif' ${assignedClassFilterOnScope.replace('sc.', 'ud.')}
         ),`
 
+    const assignedGradeFilter =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'WHERE g.id IN (SELECT DISTINCT GradeId FROM classes WHERE id IN (:assignedClassIds))'
+        : ''
+
     const query = `
     WITH GradeClassCounts AS (SELECT GradeId, COUNT(id) AS totalClass FROM classes ${assignedClassFilterOnClasses} GROUP BY GradeId),
     ${userScopeCte}
@@ -233,8 +238,23 @@ export class QuestionnaireSubmissionRepository {
     FROM UserMentalState
     WHERE healthStatus IS NOT NULL OR EXISTS (SELECT 1 FROM UnstableMentalScore WHERE UnstableMentalScore.UserId = UserMentalState.UserId)) ums ON sc.UserId = ums.UserId
     LEFT JOIN GradeClassCounts gcc ON g.id = gcc.GradeId
+    ${assignedGradeFilter}
     GROUP BY g.id, g.name, g.level, gcc.totalClass
-    ORDER BY g.name;`
+    ORDER BY CASE UPPER(TRIM(REPLACE(g.name, 'KELAS ', '')))
+      WHEN 'VII' THEN 7
+      WHEN '7' THEN 7
+      WHEN 'VIII' THEN 8
+      WHEN '8' THEN 8
+      WHEN 'IX' THEN 9
+      WHEN '9' THEN 9
+      WHEN 'X' THEN 10
+      WHEN '10' THEN 10
+      WHEN 'XI' THEN 11
+      WHEN '11' THEN 11
+      WHEN 'XII' THEN 12
+      WHEN '12' THEN 12
+      ELSE 99
+    END ASC, g.name ASC;`
 
     const resultQuery = await sequelize.query<ISummarizePerGrade>(query, {
       replacements: {
