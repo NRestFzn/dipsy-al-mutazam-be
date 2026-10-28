@@ -13,6 +13,7 @@ export interface TeacherDto {
   profilePicture?: string | null
   roles: RoleDto[]
   homeroomClasses: TeacherHomeroomClassDto[]
+  counselorClasses?: TeacherHomeroomClassDto[]
   createdAt?: Date
   updatedAt?: Date
 }

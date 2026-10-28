@@ -111,7 +111,7 @@ export class ClassRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.ClassId = \`Class\`.\`id\`
+              WHERE ud.ClassId = \`Class\`.\`id\` AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],
@@ -238,7 +238,7 @@ export class ClassRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.ClassId = \`Class\`.\`id\`
+              WHERE ud.ClassId = \`Class\`.\`id\` AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],

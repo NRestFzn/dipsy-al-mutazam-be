@@ -30,7 +30,7 @@ export class GradeRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.GradeId = Grade.id
+              WHERE ud.GradeId = Grade.id AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],
@@ -108,7 +108,7 @@ export class GradeRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.GradeId = Grade.id
+              WHERE ud.GradeId = Grade.id AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],
@@ -123,7 +123,7 @@ export class GradeRepository {
                 Sequelize.literal(`(
                   SELECT COUNT(*)
                   FROM user_details AS ud
-                  WHERE ud.ClassId = classes.id
+                  WHERE ud.ClassId = classes.id AND ud.studentStatus = 'aktif'
                 )`),
                 'studentCount',
               ],

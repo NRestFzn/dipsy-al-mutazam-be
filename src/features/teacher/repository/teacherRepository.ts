@@ -6,6 +6,7 @@ import UserHasRoles from '@/database/model/userHasRoles'
 import Class from '@/database/model/class'
 import Grade from '@/database/model/grade'
 import HomeroomAssignment from '@/database/model/homeroomAssignment'
+import CounselorClassAssignment from '@/database/model/counselorClassAssignment'
 import { resolveCurrentAcademicYear } from '../../class/repository/classRepository'
 import { db } from '@/database/databaseConnection'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
@@ -66,6 +67,16 @@ export class TeacherRepository {
         })
       : []
 
+    const counselorAssignments = ids.length
+      ? await CounselorClassAssignment.findAll({
+          where: {
+            UserId: { [Op.in]: ids },
+            academicYear,
+          },
+          include: [{ model: Class, include: [Grade] }],
+        })
+      : []
+
     const data: TeacherDto[] = rows.map((row) => ({
       id: row.id,
       fullname: row.fullname,
@@ -76,13 +87,23 @@ export class TeacherRepository {
         name: role.name,
       })) as any,
       homeroomClasses: assignments
-        .filter((item) => item.UserId === row.id && (item as any).class)
+        .filter((item) => item.UserId === row.id && ((item as any).class || (item as any).Class))
         .map((item) => {
-          const cls = (item as any).class
+          const cls = (item as any).class || (item as any).Class
           return {
             id: cls.id,
             name: cls.name,
-            gradeName: cls.grade?.name ?? null,
+            gradeName: (cls.grade || cls.Grade)?.name ?? null,
+          }
+        }),
+      counselorClasses: counselorAssignments
+        .filter((item) => item.UserId === row.id && ((item as any).class || (item as any).Class))
+        .map((item) => {
+          const cls = (item as any).class || (item as any).Class
+          return {
+            id: cls.id,
+            name: cls.name,
+            gradeName: (cls.grade || cls.Grade)?.name ?? null,
           }
         }),
       createdAt: row.createdAt,
