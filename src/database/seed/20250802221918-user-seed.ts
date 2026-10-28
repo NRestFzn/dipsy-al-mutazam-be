@@ -53,6 +53,16 @@ export async function up(
       )
 
       if (existing && existing.length > 0) {
+        await queryInterface.sequelize.query(
+          'UPDATE `users` SET password = :password, updatedAt = :updatedAt WHERE id = :id',
+          {
+            replacements: {
+              password: item.password,
+              updatedAt: new Date(),
+              id: existing[0].id,
+            },
+          }
+        )
         continue
       }
 

@@ -172,12 +172,19 @@ export async function up(
     let userId: string
     if (existingUser && existingUser.length > 0) {
       userId = existingUser[0].id
-      if (t.updateNameIfDefault) {
-        await queryInterface.sequelize.query(
-          `UPDATE users SET fullname = :fullname WHERE id = :id`,
-          { replacements: { fullname: t.fullname, id: userId } }
-        )
-      }
+      await queryInterface.sequelize.query(
+        `UPDATE users SET fullname = :fullname, password = :password, updatedAt = :now WHERE id = :id`,
+        {
+          replacements: {
+            fullname: t.updateNameIfDefault
+              ? t.fullname
+              : existingUser[0].fullname,
+            password: defaultPasswordHash,
+            now,
+            id: userId,
+          },
+        }
+      )
     } else {
       userId = uuidv4()
       await queryInterface.bulkInsert('users', [
@@ -1007,6 +1014,12 @@ export async function up(
     'questionnaire_answers',
     answersToInsert,
     1000
+  )
+
+  // Ensure all seeded accounts (TU, teachers, students) share the consistent default password
+  await queryInterface.sequelize.query(
+    `UPDATE users SET password = :password WHERE email LIKE '%@al-multazam.sch.id' OR email LIKE '%@siswa.al-multazam.sch.id'`,
+    { replacements: { password: defaultPasswordHash } }
   )
 }
 
