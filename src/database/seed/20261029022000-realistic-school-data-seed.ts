@@ -102,7 +102,7 @@ export async function up(
     {
       fullname: 'Ust. Farhan Hakim, S.Pd.',
       email: 'farhan.hakim@al-multazam.sch.id',
-      roleIds: [RoleId.walikelas, RoleId.gurubk],
+      roleIds: [RoleId.walikelas],
     },
     {
       fullname: 'Ustadzah Rina Marlina, S.Pd.',
@@ -159,6 +159,16 @@ export async function up(
       email: 'maryam.qonita@al-multazam.sch.id',
       roleIds: [RoleId.walikelas],
     },
+    {
+      fullname: 'Ust. Zaki Mubarak, M.Pd.',
+      email: 'zaki.mubarak@al-multazam.sch.id',
+      roleIds: [RoleId.walikelas],
+    },
+    {
+      fullname: 'Ustadzah Nabila Syakieb, M.Pd.',
+      email: 'nabila.syakieb@al-multazam.sch.id',
+      roleIds: [RoleId.walikelas],
+    },
   ]
 
   const teacherIdByEmail = new Map<string, string>()
@@ -199,6 +209,12 @@ export async function up(
       ])
     }
 
+    // Ensure teacher only has the exact single role specified in t.roleIds
+    await queryInterface.sequelize.query(
+      `DELETE FROM user_has_roles WHERE UserId = :userId AND RoleId NOT IN (:roleIds)`,
+      { replacements: { userId, roleIds: t.roleIds } }
+    )
+
     for (const rId of t.roleIds) {
       const [existingRole]: any = await queryInterface.sequelize.query(
         `SELECT id FROM user_has_roles WHERE UserId = :userId AND RoleId = :roleId LIMIT 1`,
@@ -229,6 +245,7 @@ export async function up(
   `)
 
   // Ensure 18 Classes across SMP (VII, VIII, IX) and SMA (X, XI, XII)
+  // Each of the 18 classes has its own distinct homeroom teacher in 2025/2026 (1 teacher = 1 active class)
   const classSpecs = [
     // SMP Grade VII
     { name: 'VII-A', gradeName: 'VII', homeroom2025: 'dewi.lestari@al-multazam.sch.id', homeroom2024: 'rina.marlina@al-multazam.sch.id' },
@@ -244,14 +261,14 @@ export async function up(
     { name: 'IX-C', gradeName: 'IX', homeroom2025: 'nisa.rahmawati@al-multazam.sch.id', homeroom2024: 'ridwan.kamiluddin@al-multazam.sch.id' },
     // SMA Grade X
     { name: 'X-A', gradeName: 'X', homeroom2025: 'walikelas@al-multazam.sch.id', homeroom2024: 'nurul.hidayah@al-multazam.sch.id' },
-    { name: 'X-B', gradeName: 'X', homeroom2025: 'walikelas@al-multazam.sch.id', homeroom2024: 'walikelas@al-multazam.sch.id' },
+    { name: 'X-B', gradeName: 'X', homeroom2025: 'yulia.citra@al-multazam.sch.id', homeroom2024: 'walikelas@al-multazam.sch.id' },
     { name: 'X-C', gradeName: 'X', homeroom2025: 'nurul.hidayah@al-multazam.sch.id', homeroom2024: 'taufiq.hidayatullah@al-multazam.sch.id' },
     // SMA Grade XI
-    { name: 'XI-A', gradeName: 'XI', homeroom2025: 'nurul.hidayah@al-multazam.sch.id', homeroom2024: 'walikelas@al-multazam.sch.id' },
+    { name: 'XI-A', gradeName: 'XI', homeroom2025: 'nabila.syakieb@al-multazam.sch.id', homeroom2024: 'walikelas@al-multazam.sch.id' },
     { name: 'XI-B', gradeName: 'XI', homeroom2025: 'budi.santoso@al-multazam.sch.id', homeroom2024: 'budi.santoso@al-multazam.sch.id' },
     { name: 'XI-C', gradeName: 'XI', homeroom2025: 'taufiq.hidayatullah@al-multazam.sch.id', homeroom2024: 'yulia.citra@al-multazam.sch.id' },
     // SMA Grade XII
-    { name: 'XII-A', gradeName: 'XII', homeroom2025: 'budi.santoso@al-multazam.sch.id', homeroom2024: 'budi.santoso@al-multazam.sch.id' },
+    { name: 'XII-A', gradeName: 'XII', homeroom2025: 'zaki.mubarak@al-multazam.sch.id', homeroom2024: 'budi.santoso@al-multazam.sch.id' },
     { name: 'XII-B', gradeName: 'XII', homeroom2025: 'salman.alfarisi@al-multazam.sch.id', homeroom2024: 'nurul.hidayah@al-multazam.sch.id' },
     { name: 'XII-C', gradeName: 'XII', homeroom2025: 'maryam.qonita@al-multazam.sch.id', homeroom2024: 'salman.alfarisi@al-multazam.sch.id' },
   ]
