@@ -211,12 +211,24 @@ export async function up(
     {
       email: 'gurubk@al-multazam.sch.id',
       academicYear: '2025/2026',
-      classNames: ['VII-A', 'VIII-A', 'IX-A', 'X-A', 'X-B', 'XI-A', 'XII-A'],
+      classNames: [
+        'VII-A',
+        'VII-B',
+        'VIII-A',
+        'IX-A',
+        'X-A',
+        'X-B',
+        'X-C',
+        'XI-A',
+        'XI-B',
+        'XII-A',
+        'XII-B',
+      ],
     },
     {
       email: 'gurubk@al-multazam.sch.id',
       academicYear: '2024/2025',
-      classNames: ['X-A', 'X-B', 'XI-A', 'XII-A'],
+      classNames: ['X-A', 'X-B', 'X-C', 'XI-A', 'XI-B', 'XII-A', 'XII-B'],
     },
     {
       email: 'siti.aisyah.bk@al-multazam.sch.id',
