@@ -6,6 +6,7 @@ import { BaseQueryRequest } from '@/routes/version1/request/_baseQueryRequest'
 export class ClassQueryRepository extends BaseQueryRequest {
   public name?: string
   public GradeId?: string
+  public academicYear?: string
 
   constructor(req: Request) {
     super(req)
@@ -14,6 +15,9 @@ export class ClassQueryRepository extends BaseQueryRequest {
 
     this.name = query.name
     this.GradeId = query.GradeId
+    this.academicYear = query.academicYear
+      ? String(query.academicYear).trim()
+      : undefined
   }
 
   public queryFilter(): FindOptions {

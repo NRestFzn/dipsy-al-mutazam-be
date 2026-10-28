@@ -5,6 +5,7 @@ import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
 import {
   ClassQuery,
+  classListQuerySchema,
   createClassSchema,
   classQuerySchema,
   updateClassSchema,
@@ -54,10 +55,13 @@ route.get(
   '/:id',
   asyncHandler(async (req: Request, res: Response) => {
     const params: ClassQuery = req.getParams()
-
     const querySchema = classQuerySchema.validateSync(params)
+    const listQuery = classListQuerySchema.validateSync(req.query)
 
-    const data = await repository.getById(querySchema.id)
+    const data = await repository.getById(
+      querySchema.id,
+      listQuery.academicYear ?? undefined
+    )
 
     const httpResponse = HttpResponse.get({
       message: req.t.success.retrieved,
@@ -100,10 +104,11 @@ route.put(
 
     const querySchema = classQuerySchema.validateSync(params)
 
-    await repository.update(querySchema.id, values)
+    const data = await repository.update(querySchema.id, values)
 
     const httpResponse = HttpResponse.updated({
       message: req.t.success.updated,
+      data,
     })
 
     res.status(httpResponse.statusCode).json(httpResponse)
