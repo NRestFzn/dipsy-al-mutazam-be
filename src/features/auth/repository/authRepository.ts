@@ -45,7 +45,7 @@ export class AuthRepository {
       const RoleIds = getUser.roles.map((role) => role.id)
 
       const isStaff = RoleIds.some((id) =>
-        [RoleId.gurubk, RoleId.walikelas].includes(id)
+        [RoleId.tu, RoleId.gurubk, RoleId.walikelas].includes(id)
       )
 
       if (!isStaff) {

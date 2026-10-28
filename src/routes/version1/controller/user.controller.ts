@@ -91,7 +91,7 @@ route.put(
 route.get(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const data = await teacherRepository.getAll(req)
 
@@ -107,7 +107,7 @@ route.get(
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const values = createTeacherSchema.validateSync(req.getBody())
 
@@ -124,7 +124,7 @@ route.post(
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const values = updateTeacherSchema.validateSync(req.getBody())
     const params = req.getParams()
@@ -142,7 +142,7 @@ route.put(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const params = req.getParams()
 

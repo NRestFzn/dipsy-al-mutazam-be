@@ -32,6 +32,7 @@ import { UserLoginState } from '../../user/dto'
 import User from '@/database/model/user'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
 import Questionnaire from '@/database/model/questionnaire'
+import StudentClassHistory from '@/database/model/studentClassHistory'
 import { evaluateQuestionnaire } from '../../questionnaire/scoring'
 
 const questionnaireRepository = new QuestionnaireRepository()
@@ -125,14 +126,36 @@ export class QuestionnaireSubmissionRepository {
   async summarizeByQuestionnaireId(
     options: IGetSummaryOptions
   ): Promise<ISummarizeByQuestionnaireIdDetailed> {
-    const { startDate, endDate } = options
+    const { startDate, endDate, academicYear, assignedClassIds } = options
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
     )
 
-    const replacements: IGetSummaryOptions = {
+    if (assignedClassIds !== undefined && assignedClassIds.length === 0) {
+      return {
+        hasAssignment: false,
+        summarize: {
+          userCount: 0,
+          submitCount: 0,
+          stableMentalCount: 0,
+          unStableMentalCount: 0,
+          unStableMentalPercentage: 0,
+        },
+        perGrade: [],
+      }
+    }
+
+    const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
+    }
+
+    if (academicYear) {
+      replacements.academicYear = academicYear
+    }
+
+    if (assignedClassIds && assignedClassIds.length > 0) {
+      replacements.assignedClassIds = assignedClassIds
     }
 
     let dateFilter = ''
@@ -149,9 +172,41 @@ export class QuestionnaireSubmissionRepository {
       replacements.endDate = endDate
     }
 
-    const query = `
-    WITH GradeClassCounts AS (SELECT GradeId, COUNT(id) AS totalClass FROM classes GROUP BY GradeId),
+    const historyCount = academicYear
+      ? await StudentClassHistory.count({ where: { academicYear } })
+      : 0
+    const useHistory = Boolean(academicYear && historyCount > 0)
 
+    const assignedClassFilterOnClasses =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'WHERE id IN (:assignedClassIds)'
+        : ''
+
+    const assignedClassFilterOnScope =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'AND sc.ClassId IN (:assignedClassIds)'
+        : ''
+
+    const userScopeCte = useHistory
+      ? `UserScope AS (
+          SELECT h.UserId, h.GradeId, h.ClassId
+          FROM student_class_histories h
+          WHERE h.academicYear = :academicYear ${assignedClassFilterOnScope.replace('sc.', 'h.')}
+        ),`
+      : `UserScope AS (
+          SELECT ud.UserId, ud.GradeId, ud.ClassId
+          FROM user_details ud
+          WHERE ud.studentStatus = 'aktif' ${assignedClassFilterOnScope.replace('sc.', 'ud.')}
+        ),`
+
+    const assignedGradeFilter =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'WHERE g.id IN (SELECT DISTINCT GradeId FROM classes WHERE id IN (:assignedClassIds))'
+        : ''
+
+    const query = `
+    WITH GradeClassCounts AS (SELECT GradeId, COUNT(id) AS totalClass FROM classes ${assignedClassFilterOnClasses} GROUP BY GradeId),
+    ${userScopeCte}
     LatestSubmissionsInRange AS (SELECT id, UserId, isRisk FROM
     ( SELECT qs.id, qs.UserId, qs.isRisk, ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
     FROM questionnaire_submissions qs WHERE qs.QuestionnaireId = :QuestionnaireId ${dateFilter}) t WHERE t.rn = 1),
@@ -161,31 +216,45 @@ export class QuestionnaireSubmissionRepository {
     JOIN questionnaire_answers qa ON qa.QuestionnaireSubmissionId = ls.id
     GROUP BY ls.UserId, ls.isRisk),
     
-    UserMentalState AS (SELECT ud.UserId, ud.GradeId,
+    UserMentalState AS (SELECT sc.UserId, sc.GradeId,
     CASE
       WHEN ds.trueCount IS NULL THEN NULL
       WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
       WHEN ds.trueCount >= (select riskThreshold FROM questionnaires where id = :QuestionnaireId) THEN 1
       ELSE 0
     END AS healthStatus
-    FROM user_details ud LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId
-    WHERE ud.studentStatus = 'aktif')
+    FROM UserScope sc LEFT JOIN UnstableMentalScore ds ON sc.UserId = ds.UserId)
     
     SELECT g.name AS gradeName, g.id as gradeId, g.level as gradeLevel,
     CAST(COALESCE(gcc.totalClass, 0) AS SIGNED) AS classCount,
-    CAST(COUNT(ud.UserId) AS SIGNED) AS userCount,
+    CAST(COUNT(sc.UserId) AS SIGNED) AS userCount,
     CAST(COUNT(ums.UserId) AS SIGNED) AS submitCount,
     CAST(SUM(CASE WHEN ums.healthStatus = 0 THEN 1 ELSE 0 END) AS SIGNED) AS stableMentalCount,
     CAST(SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) AS SIGNED) AS unStableMentalCount,
     CAST(COALESCE((SUM(CASE WHEN ums.healthStatus = 1 THEN 1 ELSE 0 END) * 100) / NULLIF(COUNT(ums.UserId), 0),0) AS UNSIGNED) AS unStableMentalPercentage
     FROM grades g
-    LEFT JOIN user_details ud ON ud.GradeId = g.id AND ud.studentStatus = 'aktif'
+    LEFT JOIN UserScope sc ON sc.GradeId = g.id
     LEFT JOIN (SELECT UserId, GradeId, healthStatus
     FROM UserMentalState
-    WHERE healthStatus IS NOT NULL OR EXISTS (SELECT 1 FROM UnstableMentalScore WHERE UnstableMentalScore.UserId = UserMentalState.UserId)) ums ON ud.UserId = ums.UserId
+    WHERE healthStatus IS NOT NULL OR EXISTS (SELECT 1 FROM UnstableMentalScore WHERE UnstableMentalScore.UserId = UserMentalState.UserId)) ums ON sc.UserId = ums.UserId
     LEFT JOIN GradeClassCounts gcc ON g.id = gcc.GradeId
+    ${assignedGradeFilter}
     GROUP BY g.id, g.name, g.level, gcc.totalClass
-    ORDER BY g.name;`
+    ORDER BY CASE UPPER(TRIM(REPLACE(g.name, 'KELAS ', '')))
+      WHEN 'VII' THEN 7
+      WHEN '7' THEN 7
+      WHEN 'VIII' THEN 8
+      WHEN '8' THEN 8
+      WHEN 'IX' THEN 9
+      WHEN '9' THEN 9
+      WHEN 'X' THEN 10
+      WHEN '10' THEN 10
+      WHEN 'XI' THEN 11
+      WHEN '11' THEN 11
+      WHEN 'XII' THEN 12
+      WHEN '12' THEN 12
+      ELSE 99
+    END ASC, g.name ASC;`
 
     const resultQuery = await sequelize.query<ISummarizePerGrade>(query, {
       replacements: {
@@ -219,6 +288,7 @@ export class QuestionnaireSubmissionRepository {
         : 0
 
     const data: ISummarizeByQuestionnaireIdDetailed = {
+      hasAssignment: true,
       summarize,
       perGrade: resultQuery.map((row) => ({
         gradeId: row.gradeId,
@@ -239,7 +309,7 @@ export class QuestionnaireSubmissionRepository {
   async summarizeByGradeId(
     options: IGetSummaryOptionsByGrade
   ): Promise<ISummarizeByGradeIdDetailed> {
-    const { startDate, endDate } = options
+    const { startDate, endDate, academicYear, assignedClassIds } = options
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
@@ -247,9 +317,31 @@ export class QuestionnaireSubmissionRepository {
 
     const grade = await gradeRepository.getByPk(options.GradeId)
 
-    const replacements: IGetSummaryOptionsByGrade = {
+    if (assignedClassIds !== undefined && assignedClassIds.length === 0) {
+      return {
+        hasAssignment: false,
+        summarize: {
+          userCount: 0,
+          submitCount: 0,
+          stableMentalCount: 0,
+          unStableMentalCount: 0,
+          unStableMentalPercentage: 0,
+        },
+        perClass: [],
+      }
+    }
+
+    const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
       GradeId: grade.id,
+    }
+
+    if (academicYear) {
+      replacements.academicYear = academicYear
+    }
+
+    if (assignedClassIds && assignedClassIds.length > 0) {
+      replacements.assignedClassIds = assignedClassIds
     }
 
     let dateFilter = ''
@@ -266,14 +358,42 @@ export class QuestionnaireSubmissionRepository {
       replacements.endDate = endDate
     }
 
+    const historyCount = academicYear
+      ? await StudentClassHistory.count({ where: { academicYear } })
+      : 0
+    const useHistory = Boolean(academicYear && historyCount > 0)
+
+    const assignedClassFilter =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'AND c.id IN (:assignedClassIds)'
+        : ''
+
+    const assignedClassFilterOnScope =
+      assignedClassIds && assignedClassIds.length > 0
+        ? 'AND ClassId IN (:assignedClassIds)'
+        : ''
+
+    const userScopeCte = useHistory
+      ? `UserScope AS (
+          SELECT h.UserId, h.GradeId, h.ClassId
+          FROM student_class_histories h
+          WHERE h.academicYear = :academicYear ${assignedClassFilterOnScope}
+        ),`
+      : `UserScope AS (
+          SELECT ud.UserId, ud.GradeId, ud.ClassId
+          FROM user_details ud
+          WHERE ud.studentStatus = 'aktif' ${assignedClassFilterOnScope}
+        ),`
+
     const query = `
-    WITH ClassUserCounts AS (SELECT
+    WITH ${userScopeCte}
+    ClassUserCounts AS (SELECT
       c.id AS ClassId,
       c.GradeId,
-      COUNT(ud.UserId) AS userCount
+      COUNT(sc.UserId) AS userCount
     FROM classes c
-    LEFT JOIN user_details ud ON ud.ClassId = c.id AND ud.studentStatus = 'aktif'
-    WHERE c.GradeId = :GradeId
+    LEFT JOIN UserScope sc ON sc.ClassId = c.id
+    WHERE c.GradeId = :GradeId ${assignedClassFilter}
     GROUP BY c.id, c.GradeId),
     
     LatestSubmissionsInRange AS (
@@ -301,18 +421,17 @@ export class QuestionnaireSubmissionRepository {
 
     UserMentalState AS (
     SELECT
-      ud.UserId,
-      ud.GradeId,
-      ud.ClassId,
+      sc.UserId,
+      sc.GradeId,
+      sc.ClassId,
       CASE
         WHEN ds.trueCount IS NULL THEN NULL
         WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
         WHEN ds.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
         ELSE 0
       END AS healthStatus
-    FROM user_details ud
-    LEFT JOIN UnstableMentalScore ds ON ud.UserId = ds.UserId
-    WHERE ud.studentStatus = 'aktif')
+    FROM UserScope sc
+    LEFT JOIN UnstableMentalScore ds ON sc.UserId = ds.UserId)
 
     SELECT
     c.name AS className, c.id as classId,
@@ -335,7 +454,7 @@ export class QuestionnaireSubmissionRepository {
     WHERE healthStatus IS NOT NULL OR EXISTS (
       SELECT 1 FROM UnstableMentalScore ds WHERE ds.UserId = UserMentalState.UserId
     )) ums ON c.id = ums.ClassId
-    WHERE c.GradeId = :GradeId
+    WHERE c.GradeId = :GradeId ${assignedClassFilter}
     GROUP BY c.id, c.name, cuc.userCount
     ORDER BY c.name;`
 
@@ -371,6 +490,7 @@ export class QuestionnaireSubmissionRepository {
         : 0
 
     const data: ISummarizeByGradeIdDetailed = {
+      hasAssignment: true,
       summarize,
       perClass: resultQuery.map((row) => ({
         classId: row.classId,
@@ -389,22 +509,54 @@ export class QuestionnaireSubmissionRepository {
   async summarizeByClassId(
     options: IGetSummaryOptionsByClass
   ): Promise<ISummarizeByClassIdDetailed> {
-    const { startDate, endDate, academicYear } = options
-
-    let effectiveStartDate: any = startDate
-    let effectiveEndDate: any = endDate
-
-    if (academicYear && !startDate && !endDate) {
-      const [firstYear, secondYear] = academicYear.split('/')
-      effectiveStartDate = `${firstYear}-07-01`
-      effectiveEndDate = `${secondYear}-06-30`
-    }
+    const { startDate, endDate, academicYear, assignedClassIds } = options
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
     )
 
     const cls = await classRepository.getByPk(options.ClassId)
+
+    if (
+      assignedClassIds !== undefined &&
+      (assignedClassIds.length === 0 || !assignedClassIds.includes(cls.id))
+    ) {
+      return {
+        hasAssignment: false,
+        summarize: {
+          userCount: 0,
+          submitCount: 0,
+          stableMentalCount: 0,
+          unStableMentalCount: 0,
+          unStableMentalPercentage: 0,
+        },
+        students: [],
+      }
+    }
+
+    let effectiveStartDate: any = startDate
+    let effectiveEndDate: any = endDate
+
+    if (academicYear && !startDate && !endDate) {
+      const [firstYear, secondYear] = academicYear.split('/')
+      const candidateStart = `${firstYear}-07-01`
+      const candidateEnd = `${secondYear}-06-30`
+      const [{ cnt }] = await sequelize.query<{ cnt: number }>(
+        `SELECT COUNT(*) AS cnt FROM questionnaire_submissions qs WHERE qs.QuestionnaireId = :QuestionnaireId AND DATE(qs.createdAt) BETWEEN :startDate AND :endDate`,
+        {
+          replacements: {
+            QuestionnaireId: questionnaire.id,
+            startDate: candidateStart,
+            endDate: candidateEnd,
+          },
+          type: QueryTypes.SELECT,
+        }
+      )
+      if (Number(cnt) > 0) {
+        effectiveStartDate = candidateStart
+        effectiveEndDate = candidateEnd
+      }
+    }
 
     const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
@@ -426,7 +578,12 @@ export class QuestionnaireSubmissionRepository {
       replacements.endDate = effectiveEndDate
     }
 
-    const scopeCte = academicYear
+    const historyCount = academicYear
+      ? await StudentClassHistory.count({ where: { academicYear } })
+      : 0
+    const useHistory = Boolean(academicYear && historyCount > 0)
+
+    const scopeCte = useHistory
       ? `UserScope AS (
           SELECT h.UserId, h.ClassId
           FROM student_class_histories h
@@ -469,13 +626,14 @@ export class QuestionnaireSubmissionRepository {
           sc.ClassId,
           ds.submissionDate AS lastSubmissionDate,
           CASE
+            WHEN ds.UserId IS NULL THEN 0
             WHEN ds.isRisk IS NOT NULL THEN ds.isRisk
             WHEN ds.trueCount >= (select riskThreshold from questionnaires where id = :QuestionnaireId) THEN 1
             ELSE 0
           END AS isMentalUnStable
         FROM UserScope sc
         INNER JOIN users u on sc.UserId = u.id
-        JOIN UnstableMentalScore ds ON ds.UserId = sc.UserId
+        LEFT JOIN UnstableMentalScore ds ON ds.UserId = sc.UserId
       )
 
       SELECT
@@ -498,12 +656,14 @@ export class QuestionnaireSubmissionRepository {
       UserId: r.UserId,
       fullname: r.fullname,
       lastSubmissionDate: r.lastSubmissionDate,
-      isMentalUnStable: !!r.isMentalUnStable,
+      isMentalUnStable: r.lastSubmissionDate ? !!r.isMentalUnStable : null,
     }))
 
     const submitCount = students.filter((u) => u.lastSubmissionDate).length
 
-    const unStableMentalCount = students.filter((u) => u.isMentalUnStable).length
+    const unStableMentalCount = students.filter(
+      (u) => u.lastSubmissionDate && u.isMentalUnStable
+    ).length
 
     const stableMentalCount = submitCount - unStableMentalCount
 
@@ -519,6 +679,7 @@ export class QuestionnaireSubmissionRepository {
     }
 
     const data: ISummarizeByClassIdDetailed = {
+      hasAssignment: true,
       summarize,
       students,
     }

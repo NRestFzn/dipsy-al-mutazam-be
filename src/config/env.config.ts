@@ -6,8 +6,8 @@ export const env = {
   APP_PORT: validate.number(process.env.APP_PORT) || 8000,
   APP_NAME: process.env.APP_NAME || 'Express Sequelize Typescript',
   APP_URL: process.env.APP_URL || 'http://localhost:8000',
-  APP_DEFAULT_PASS: process.env.APP_DEFAULT_PASS || 'yourpassword',
-  APP_LANG: process.env.APP_LANG || 'en',
+  APP_DEFAULT_PASS: process.env.APP_DEFAULT_PASS || 'password',
+  APP_LANG: process.env.APP_LANG || 'id',
 
   SEQUELIZE_CONNECTION: process.env.SEQUELIZE_CONNECTION || 'mysql',
   SEQUELIZE_HOST: process.env.SEQUELIZE_HOST || '127.0.0.1',

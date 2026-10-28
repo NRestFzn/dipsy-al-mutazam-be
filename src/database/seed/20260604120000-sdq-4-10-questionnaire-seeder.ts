@@ -267,6 +267,13 @@ export async function up(
   queryInterface: QueryInterface,
   Sequelize: typeof DataTypes
 ) {
+  const [existing]: any = await queryInterface.sequelize.query(
+    `SELECT id FROM questionnaires WHERE id = '${QUESTIONNAIRE_ID}' LIMIT 1`
+  )
+  if (existing && existing.length > 0) {
+    return
+  }
+
   const transaction = await queryInterface.sequelize.transaction()
   const now = new Date()
 

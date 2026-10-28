@@ -47,11 +47,25 @@ export async function up(
     ]
 
     for (const fk of foreignKeys) {
-      // 1. Hapus Constraint Lama (Nama sesuai screenshot: ibfk_...)
-      // Pastikan nama tabel 'userDetail' sesuai dengan definisi model Anda
+      // 1. Hapus Constraint Lama
+      let constraintNameToRemove = fk.oldConstraintName
+      const [results]: any = await queryInterface.sequelize.query(
+        `SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+         WHERE TABLE_SCHEMA = DATABASE() 
+           AND TABLE_NAME = 'userDetail' 
+           AND COLUMN_NAME = '${fk.field}' 
+           AND REFERENCED_TABLE_NAME IS NOT NULL 
+         LIMIT 1`,
+        { transaction }
+      )
+
+      if (results && results.length > 0) {
+        constraintNameToRemove = results[0].CONSTRAINT_NAME
+      }
+
       await queryInterface.removeConstraint(
         'userDetail',
-        fk.oldConstraintName,
+        constraintNameToRemove,
         { transaction }
       )
 

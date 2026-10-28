@@ -30,7 +30,7 @@ export class GradeRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.GradeId = Grade.id
+              WHERE ud.GradeId = Grade.id AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],
@@ -38,10 +38,40 @@ export class GradeRepository {
       },
     })
 
+    const gradeOrderMap: Record<string, number> = {
+      VII: 7,
+      '7': 7,
+      VIII: 8,
+      '8': 8,
+      IX: 9,
+      '9': 9,
+      X: 10,
+      '10': 10,
+      XI: 11,
+      '11': 11,
+      XII: 12,
+      '12': 12,
+    }
+
+    const sortedData = [...data].sort((a, b) => {
+      const keyA = String(a.name || '')
+        .toUpperCase()
+        .replace('KELAS ', '')
+        .trim()
+      const keyB = String(b.name || '')
+        .toUpperCase()
+        .replace('KELAS ', '')
+        .trim()
+      const rankA = gradeOrderMap[keyA] ?? 99
+      const rankB = gradeOrderMap[keyB] ?? 99
+      if (rankA !== rankB) return rankA - rankB
+      return String(a.name).localeCompare(String(b.name))
+    })
+
     const dataCount = await Grade.count()
 
     return {
-      data: data as unknown as GradeDto[],
+      data: sortedData as unknown as GradeDto[],
       meta: {
         pagination: {
           page: query.page,
@@ -78,7 +108,7 @@ export class GradeRepository {
             Sequelize.literal(`(
               SELECT COUNT(*)
               FROM user_details AS ud
-              WHERE ud.GradeId = Grade.id
+              WHERE ud.GradeId = Grade.id AND ud.studentStatus = 'aktif'
             )`),
             'studentCount',
           ],
@@ -93,7 +123,7 @@ export class GradeRepository {
                 Sequelize.literal(`(
                   SELECT COUNT(*)
                   FROM user_details AS ud
-                  WHERE ud.ClassId = classes.id
+                  WHERE ud.ClassId = classes.id AND ud.studentStatus = 'aktif'
                 )`),
                 'studentCount',
               ],
