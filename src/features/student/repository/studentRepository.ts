@@ -16,6 +16,8 @@ import {
 import UserDetail from '@/database/model/userDetail'
 import Grade from '@/database/model/grade'
 import Class from '@/database/model/class'
+import HomeroomAssignment from '@/database/model/homeroomAssignment'
+import { resolveCurrentAcademicYear } from '../../class/repository/classRepository'
 import { RoleId } from '@/libs/constant/roleIds'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
 import UserHasRoles from '@/database/model/userHasRoles'
@@ -237,8 +239,11 @@ export class StudentRepository {
 
     if (existing) return
 
-    const classData = detail.ClassId
-      ? await Class.findByPk(detail.ClassId, { transaction })
+    const homeroomAssignment = detail.ClassId
+      ? await HomeroomAssignment.findOne({
+          where: { ClassId: detail.ClassId, academicYear },
+          transaction,
+        })
       : null
 
     await StudentClassHistory.create(
@@ -247,7 +252,7 @@ export class StudentRepository {
         academicYear,
         GradeId: detail.GradeId,
         ClassId: detail.ClassId,
-        homeroomTeacherId: classData?.homeroomTeacherId ?? null,
+        homeroomTeacherId: homeroomAssignment?.UserId ?? null,
       } as any,
       { transaction }
     )
@@ -273,6 +278,14 @@ export class StudentRepository {
 
         if (!targetClass) throw new ErrorResponse.NotFound('class.notFound')
 
+        const targetHomeroom = await HomeroomAssignment.findOne({
+          where: {
+            ClassId: item.targetClassId,
+            academicYear: formData.academicYear,
+          },
+          transaction,
+        })
+
         await detail.update(
           {
             GradeId: item.targetGradeId,
@@ -297,7 +310,7 @@ export class StudentRepository {
             academicYear: formData.academicYear,
             GradeId: item.targetGradeId,
             ClassId: item.targetClassId,
-            homeroomTeacherId: targetClass.homeroomTeacherId ?? null,
+            homeroomTeacherId: targetHomeroom?.UserId ?? null,
             notes: item.notes ?? null,
           } as any,
           { transaction }
@@ -331,8 +344,37 @@ export class StudentRepository {
     })
   }
 
-  async getTaughtHistory(teacherId: string): Promise<StudentClassHistory[]> {
-    return StudentClassHistory.findAll({
+  async getTaughtHistory(teacherId: string): Promise<any[]> {
+    const currentAcademicYear = await resolveCurrentAcademicYear()
+
+    const currentAssignments = await HomeroomAssignment.findAll({
+      where: {
+        UserId: teacherId,
+        academicYear: currentAcademicYear,
+      },
+    })
+
+    const assignedClassIds = currentAssignments.map((a) => a.ClassId)
+
+    const currentStudents =
+      assignedClassIds.length > 0
+        ? await UserDetail.findAll({
+            where: {
+              ClassId: { [Op.in]: assignedClassIds },
+              studentStatus: 'aktif',
+            },
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'fullname', 'email'],
+              },
+              { model: Grade },
+              { model: Class },
+            ],
+          })
+        : []
+
+    const historyRows = await StudentClassHistory.findAll({
       where: { homeroomTeacherId: teacherId },
       include: [
         {
@@ -354,6 +396,45 @@ export class StudentRepository {
         ['createdAt', 'ASC'],
       ],
     })
+
+    const pastHistory = historyRows
+      .filter((h) => h.academicYear !== currentAcademicYear)
+      .map((h) => h.toJSON())
+
+    const currentEntries = currentStudents.map((ud) => {
+      const json: any = ud.toJSON()
+      const userObj = json.user || json.User
+      return {
+        id: `${ud.UserId}-${currentAcademicYear}`,
+        UserId: ud.UserId,
+        academicYear: currentAcademicYear,
+        GradeId: ud.GradeId,
+        ClassId: ud.ClassId,
+        homeroomTeacherId: teacherId,
+        notes: null,
+        createdAt: ud.createdAt,
+        updatedAt: ud.updatedAt,
+        student: userObj
+          ? {
+              id: userObj.id,
+              fullname: userObj.fullname,
+              email: userObj.email,
+              userDetail: {
+                nisn: ud.nisn,
+                nis: ud.nis,
+                studentStatus: ud.studentStatus,
+                graduationYear: ud.graduationYear,
+              },
+            }
+          : null,
+        grade: json.grade || json.Grade || null,
+        class: json.class || json.Class || null,
+      }
+    })
+
+    return [...currentEntries, ...pastHistory].sort((a, b) =>
+      String(b.academicYear).localeCompare(String(a.academicYear))
+    )
   }
 
   async getAcademicHistory(studentId: string): Promise<StudentClassHistory[]> {

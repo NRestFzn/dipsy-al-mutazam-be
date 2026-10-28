@@ -28,7 +28,9 @@ import {
 import User from '@/database/model/user'
 import UserDetail from '@/database/model/userDetail'
 import Class from '@/database/model/class'
+import HomeroomAssignment from '@/database/model/homeroomAssignment'
 import StudentClassHistory from '@/database/model/studentClassHistory'
+import { resolveCurrentAcademicYear } from '@/features/class/repository/classRepository'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import { RoleId } from '@/libs/constant/roleIds'
 import { UserLoginState } from '@/features/user/dto'
@@ -139,10 +141,12 @@ route.get(
     // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
     if (
       user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
     ) {
-      if (query.academicYear) {
-        const taught = await StudentClassHistory.findOne({
+      const currentAcademicYear = await resolveCurrentAcademicYear()
+      if (query.academicYear && query.academicYear !== currentAcademicYear) {
+        const taughtHistory = await StudentClassHistory.findOne({
           where: {
             homeroomTeacherId: user.uid,
             academicYear: query.academicYear,
@@ -150,7 +154,15 @@ route.get(
           },
         })
 
-        if (!taught) {
+        const assignedInYear = await HomeroomAssignment.findOne({
+          where: {
+            UserId: user.uid,
+            academicYear: query.academicYear,
+            ClassId: query.ClassId,
+          },
+        })
+
+        if (!taughtHistory && !assignedInYear) {
           throw new ErrorResponse.Forbidden(
             'Anda tidak mengampu kelas ini pada tahun ajaran tersebut'
           )
@@ -158,17 +170,31 @@ route.get(
 
         targetClassId = query.ClassId
       } else {
-        const assignedClass = await Class.findOne({
-          where: { homeroomTeacherId: user.uid },
+        const targetYear = query.academicYear || currentAcademicYear
+        const assignedClasses = await HomeroomAssignment.findAll({
+          where: {
+            UserId: user.uid,
+            academicYear: targetYear,
+          },
         })
 
-        if (!assignedClass) {
+        if (assignedClasses.length === 0) {
           throw new ErrorResponse.Forbidden(
             'Anda tidak terdaftar sebagai wali kelas'
           )
         }
 
-        targetClassId = assignedClass.id
+        const matchedClass = assignedClasses.find(
+          (item) => item.ClassId === query.ClassId
+        )
+
+        if (!matchedClass) {
+          throw new ErrorResponse.Forbidden(
+            'Anda tidak mengampu kelas ini pada tahun ajaran tersebut'
+          )
+        }
+
+        targetClassId = matchedClass.ClassId
       }
     }
 
@@ -203,11 +229,17 @@ route.get(
     // If request is from Wali Kelas (and not Guru BK), verify student is in their class
     if (
       user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk)
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
     ) {
-      const assignedClass = await Class.findOne({
-        where: { homeroomTeacherId: user.uid },
+      const currentAcademicYear = await resolveCurrentAcademicYear()
+      const assignedClasses = await HomeroomAssignment.findAll({
+        where: {
+          UserId: user.uid,
+          academicYear: currentAcademicYear,
+        },
       })
+      const assignedClassIds = assignedClasses.map((a) => a.ClassId)
 
       const taughtHistory = await StudentClassHistory.findOne({
         where: { UserId: query.UserId, homeroomTeacherId: user.uid },
@@ -218,9 +250,10 @@ route.get(
       })
 
       const isCurrentClass =
-        !!assignedClass &&
+        assignedClassIds.length > 0 &&
         !!studentDetail &&
-        studentDetail.ClassId === assignedClass.id
+        !!studentDetail.ClassId &&
+        assignedClassIds.includes(studentDetail.ClassId)
 
       if (!isCurrentClass && !taughtHistory) {
         throw new ErrorResponse.Forbidden('Siswa bukan anggota kelas Anda')

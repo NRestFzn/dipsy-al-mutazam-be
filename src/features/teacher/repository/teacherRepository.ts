@@ -5,6 +5,8 @@ import Role from '@/database/model/role'
 import UserHasRoles from '@/database/model/userHasRoles'
 import Class from '@/database/model/class'
 import Grade from '@/database/model/grade'
+import HomeroomAssignment from '@/database/model/homeroomAssignment'
+import { resolveCurrentAcademicYear } from '../../class/repository/classRepository'
 import { db } from '@/database/databaseConnection'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import { MetaPaginationDto } from '@/routes/version1/response/metaData'
@@ -50,11 +52,17 @@ export class TeacherRepository {
     })
 
     const ids = rows.map((row) => row.id)
+    const academicYear =
+      String(req.query.academicYear ?? '').trim() ||
+      (await resolveCurrentAcademicYear())
 
-    const classes = ids.length
-      ? await Class.findAll({
-          where: { homeroomTeacherId: { [Op.in]: ids } },
-          include: [Grade],
+    const assignments = ids.length
+      ? await HomeroomAssignment.findAll({
+          where: {
+            UserId: { [Op.in]: ids },
+            academicYear,
+          },
+          include: [{ model: Class, include: [Grade] }],
         })
       : []
 
@@ -67,13 +75,16 @@ export class TeacherRepository {
         id: role.id,
         name: role.name,
       })) as any,
-      homeroomClasses: classes
-        .filter((item) => item.homeroomTeacherId === row.id)
-        .map((item) => ({
-          id: item.id,
-          name: item.name,
-          gradeName: (item as any).grade?.name ?? null,
-        })),
+      homeroomClasses: assignments
+        .filter((item) => item.UserId === row.id && (item as any).class)
+        .map((item) => {
+          const cls = (item as any).class
+          return {
+            id: cls.id,
+            name: cls.name,
+            gradeName: cls.grade?.name ?? null,
+          }
+        }),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     }))
@@ -184,8 +195,8 @@ export class TeacherRepository {
 
       if (!user) throw new ErrorResponse.NotFound('user.notFound')
 
-      const homeroom = await Class.findOne({
-        where: { homeroomTeacherId: id },
+      const homeroom = await HomeroomAssignment.findOne({
+        where: { UserId: id },
         transaction,
       })
 
