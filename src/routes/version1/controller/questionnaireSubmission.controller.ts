@@ -1,4 +1,5 @@
 import { QuestionnaireSubmissionRepository } from '@/features/questionnaireSubmission/repository/questionnaireSubmissionRepository'
+import { CounselorAssignmentRepository } from '@/features/counselorAssignment/repository/counselorAssignmentRepository'
 import authorization from '@/middleware/authorization'
 import express, { Response, Request } from 'express'
 import HttpResponse from '@/libs/http/HttpResponse'
@@ -35,8 +36,21 @@ import { UserLoginState } from '@/features/user/dto'
 import { permissionAccess } from '@/middleware/permissionAccess'
 
 const repository = new QuestionnaireSubmissionRepository()
+const counselorAssignmentRepository = new CounselorAssignmentRepository()
 
 const route = express.Router()
+
+function getEffectiveRole(req: Request, user: UserLoginState): string | null {
+  const activeRoleId = req.header('x-active-role')
+  if (activeRoleId && user.RoleIds.includes(activeRoleId)) {
+    return activeRoleId
+  }
+  if (user.RoleIds.includes(RoleId.tu)) return RoleId.tu
+  if (user.RoleIds.includes(RoleId.gurubk)) return RoleId.gurubk
+  if (user.RoleIds.includes(RoleId.walikelas)) return RoleId.walikelas
+  if (user.RoleIds.includes(RoleId.siswa)) return RoleId.siswa
+  return null
+}
 
 route.get(
   '/history-me',
@@ -76,12 +90,34 @@ route.get(
   permissionAccess([RoleId.tu, RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
+    const user: UserLoginState = req.getState('userLoginState')
 
-    const query: SummarizeByQuestionnaireIdQuery = req.query
+    const query: SummarizeByQuestionnaireIdQuery =
+      summarizeByQuestionnaireIdQuery.validateSync(req.query)
+
+    const effectiveRole = getEffectiveRole(req, user)
+    let academicYear = query.academicYear
+    let assignedClassIds: string[] | undefined = undefined
+
+    if (effectiveRole === RoleId.gurubk) {
+      if (!academicYear) {
+        academicYear =
+          await counselorAssignmentRepository.resolveDefaultAcademicYear(
+            user.uid
+          )
+      }
+      assignedClassIds =
+        await counselorAssignmentRepository.getAssignedClassIds(
+          user.uid,
+          academicYear
+        )
+    }
 
     const options: IGetSummaryOptions = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
+      academicYear,
+      assignedClassIds,
     }
 
     const data = await repository.summarizeByQuestionnaireId(options)
@@ -101,14 +137,35 @@ route.get(
   permissionAccess([RoleId.tu, RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: SummarizeByQuestionnaireIdParams = req.getParams()
+    const user: UserLoginState = req.getState('userLoginState')
 
     const query: SummarizeByGradeIdQuery = summarizeByGradeIdQuery.validateSync(
       req.query
     )
 
+    const effectiveRole = getEffectiveRole(req, user)
+    let academicYear = query.academicYear
+    let assignedClassIds: string[] | undefined = undefined
+
+    if (effectiveRole === RoleId.gurubk) {
+      if (!academicYear) {
+        academicYear =
+          await counselorAssignmentRepository.resolveDefaultAcademicYear(
+            user.uid
+          )
+      }
+      assignedClassIds =
+        await counselorAssignmentRepository.getAssignedClassIds(
+          user.uid,
+          academicYear
+        )
+    }
+
     const options: IGetSummaryOptionsByGrade = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
+      academicYear,
+      assignedClassIds,
     }
 
     const data = await repository.summarizeByGradeId(options)
@@ -135,13 +192,24 @@ route.get(
     )
 
     let targetClassId = query.ClassId
+    const effectiveRole = getEffectiveRole(req, user)
+    let academicYear = query.academicYear
+    let assignedClassIds: string[] | undefined = undefined
 
-    // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
-    if (
-      user.RoleIds.includes(RoleId.walikelas) &&
-      !user.RoleIds.includes(RoleId.gurubk) &&
-      !user.RoleIds.includes(RoleId.tu)
-    ) {
+    if (effectiveRole === RoleId.gurubk) {
+      if (!academicYear) {
+        academicYear =
+          await counselorAssignmentRepository.resolveDefaultAcademicYear(
+            user.uid
+          )
+      }
+      assignedClassIds =
+        await counselorAssignmentRepository.getAssignedClassIds(
+          user.uid,
+          academicYear
+        )
+    } else if (effectiveRole === RoleId.walikelas) {
+      // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
       if (query.academicYear) {
         const taught = await StudentClassHistory.findOne({
           where: {
@@ -177,6 +245,8 @@ route.get(
       QuestionnaireId: params.QuestionnaireId,
       ...query,
       ClassId: targetClassId,
+      academicYear,
+      assignedClassIds,
     }
 
     const data = await repository.summarizeByClassId(options)
