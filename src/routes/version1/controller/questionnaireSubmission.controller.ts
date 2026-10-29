@@ -296,8 +296,12 @@ route.get(
     const query: SummarizeByStudentIdQuery =
       summarizeByStudentIdQuery.validateSync(req.query)
 
+    const effectiveRole = getEffectiveRole(req, user)
+
+    let includeAllYears = effectiveRole === RoleId.tu
+
     // If request is from Wali Kelas (and not Guru BK or TU), verify student is in their class
-    if (getEffectiveRole(req, user) === RoleId.walikelas) {
+    if (effectiveRole === RoleId.walikelas) {
       const currentAcademicYear = await resolveCurrentAcademicYear()
       const assignedClasses = await HomeroomAssignment.findAll({
         where: {
@@ -324,11 +328,37 @@ route.get(
       if (!isCurrentClass && !taughtHistory) {
         throw new ErrorResponse.Forbidden('Siswa bukan anggota kelas Anda')
       }
+
+      includeAllYears = isCurrentClass
+    }
+
+    if (effectiveRole === RoleId.gurubk) {
+      const academicYear =
+        query.academicYear ||
+        (await counselorAssignmentRepository.resolveDefaultAcademicYear(
+          user.uid
+        ))
+
+      const assignedClassIds =
+        await counselorAssignmentRepository.getAssignedClassIds(
+          user.uid,
+          academicYear
+        )
+
+      const studentDetail = await UserDetail.findOne({
+        where: { UserId: query.UserId },
+      })
+
+      includeAllYears =
+        assignedClassIds.length > 0 &&
+        !!studentDetail?.ClassId &&
+        assignedClassIds.includes(studentDetail.ClassId)
     }
 
     const options: IGetSummaryOptionsByStudent = {
       QuestionnaireId: params.QuestionnaireId,
       ...query,
+      includeAllYears,
     }
 
     const data = await repository.summarizeByUserId(options)

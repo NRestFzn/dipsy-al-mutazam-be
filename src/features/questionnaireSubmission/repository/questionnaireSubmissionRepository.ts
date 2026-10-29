@@ -20,6 +20,8 @@ import {
 import { QuestionnaireRepository } from '../../questionnaire/repository/questionnaireRepository'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
 import QuestionnaireSubmission from '@/database/model/questionnaireSubmission'
+import UserDetail from '@/database/model/userDetail'
+import { resolveCurrentAcademicYear } from '@/features/class/repository/classRepository'
 import QuestionnaireAnswer from '@/database/model/questionnaireAnswer'
 import QuestionnaireQuestion from '@/database/model/questionnaireQuestion'
 import { QueryTypes } from 'sequelize'
@@ -154,6 +156,10 @@ export class QuestionnaireSubmissionRepository {
       replacements.academicYear = academicYear
     }
 
+    const yearFilter = academicYear
+      ? 'AND qs.academicYear = :academicYear'
+      : ''
+
     if (assignedClassIds && assignedClassIds.length > 0) {
       replacements.assignedClassIds = assignedClassIds
     }
@@ -209,7 +215,7 @@ export class QuestionnaireSubmissionRepository {
     ${userScopeCte}
     LatestSubmissionsInRange AS (SELECT id, UserId, isRisk FROM
     ( SELECT qs.id, qs.UserId, qs.isRisk, ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
-    FROM questionnaire_submissions qs WHERE qs.QuestionnaireId = :QuestionnaireId ${dateFilter}) t WHERE t.rn = 1),
+    FROM questionnaire_submissions qs WHERE qs.QuestionnaireId = :QuestionnaireId ${dateFilter} ${yearFilter}) t WHERE t.rn = 1),
     
     UnstableMentalScore AS (SELECT ls.UserId, ls.isRisk, SUM(CASE WHEN LOWER(COALESCE(qa.answerValue, '')) = 'true' THEN 1 ELSE 0 END)
     AS trueCount FROM LatestSubmissionsInRange ls
@@ -340,6 +346,10 @@ export class QuestionnaireSubmissionRepository {
       replacements.academicYear = academicYear
     }
 
+    const yearFilter = academicYear
+      ? 'AND qs.academicYear = :academicYear'
+      : ''
+
     if (assignedClassIds && assignedClassIds.length > 0) {
       replacements.assignedClassIds = assignedClassIds
     }
@@ -406,7 +416,7 @@ export class QuestionnaireSubmissionRepository {
         ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
       FROM questionnaire_submissions qs
       WHERE qs.QuestionnaireId = :QuestionnaireId
-        ${dateFilter}
+        ${dateFilter} ${yearFilter}
     ) t
     WHERE t.rn = 1),
 
@@ -534,29 +544,8 @@ export class QuestionnaireSubmissionRepository {
       }
     }
 
-    let effectiveStartDate: any = startDate
-    let effectiveEndDate: any = endDate
-
-    if (academicYear && !startDate && !endDate) {
-      const [firstYear, secondYear] = academicYear.split('/')
-      const candidateStart = `${firstYear}-07-01`
-      const candidateEnd = `${secondYear}-06-30`
-      const [{ cnt }] = await sequelize.query<{ cnt: number }>(
-        `SELECT COUNT(*) AS cnt FROM questionnaire_submissions qs WHERE qs.QuestionnaireId = :QuestionnaireId AND DATE(qs.createdAt) BETWEEN :startDate AND :endDate`,
-        {
-          replacements: {
-            QuestionnaireId: questionnaire.id,
-            startDate: candidateStart,
-            endDate: candidateEnd,
-          },
-          type: QueryTypes.SELECT,
-        }
-      )
-      if (Number(cnt) > 0) {
-        effectiveStartDate = candidateStart
-        effectiveEndDate = candidateEnd
-      }
-    }
+    const effectiveStartDate: any = startDate
+    const effectiveEndDate: any = endDate
 
     const replacements: Record<string, any> = {
       QuestionnaireId: questionnaire.id,
@@ -564,6 +553,10 @@ export class QuestionnaireSubmissionRepository {
     }
 
     if (academicYear) replacements.academicYear = academicYear
+
+    const yearFilter = academicYear
+      ? 'AND qs.academicYear = :academicYear'
+      : ''
 
     let dateFilter = ''
     if (effectiveStartDate && effectiveEndDate) {
@@ -607,7 +600,7 @@ export class QuestionnaireSubmissionRepository {
           ROW_NUMBER() OVER (PARTITION BY qs.UserId ORDER BY qs.createdAt DESC) AS rn
         FROM questionnaire_submissions qs
         WHERE qs.QuestionnaireId = :QuestionnaireId
-        ${dateFilter}
+        ${dateFilter} ${yearFilter}
       ),
 
       UnstableMentalScore AS (
@@ -690,7 +683,7 @@ export class QuestionnaireSubmissionRepository {
   async summarizeByUserId(
     options: IGetSummaryOptionsByStudent
   ): Promise<ISummarizeByStudentIdDetailed> {
-    const { startDate, endDate } = options
+    const { startDate, endDate, academicYear, includeAllYears } = options
 
     const questionnaire = await questionnaireRepository.getById(
       options.QuestionnaireId
@@ -702,6 +695,13 @@ export class QuestionnaireSubmissionRepository {
       QuestionnaireId: questionnaire.id,
       UserId: user.id,
     }
+
+    const yearFilter =
+      academicYear && !includeAllYears
+        ? 'AND qs.academicYear = :academicYear'
+        : ''
+
+    if (yearFilter) replacements.academicYear = academicYear
 
     let dateFilter = ''
 
@@ -731,7 +731,7 @@ export class QuestionnaireSubmissionRepository {
     JOIN user_details ud ON ud.UserId = qs.UserId
     WHERE qs.QuestionnaireId = :QuestionnaireId
       AND ud.UserId = :UserId
-      ${dateFilter}),
+      ${dateFilter} ${yearFilter}),
 
     AnswerCounts AS (
     SELECT
@@ -922,6 +922,13 @@ export class QuestionnaireSubmissionRepository {
       scoringResult.answers.map((answer) => [answer.QuestionId, answer])
     )
 
+    const studentDetail = await UserDetail.findOne({
+      where: { UserId: formData.UserId },
+    })
+
+    const academicYear =
+      studentDetail?.academicYear || (await resolveCurrentAcademicYear())
+
     await db.sequelize!.transaction(async (transaction) => {
       const bulkCreate = []
 
@@ -931,6 +938,7 @@ export class QuestionnaireSubmissionRepository {
           SubmittedBy: formData.SubmittedBy,
           UserId: formData.UserId,
           QuestionnaireId: formData.QuestionnaireId,
+          academicYear,
           score: scoringResult.score,
           resultKey: scoringResult.resultKey,
           resultLabel: scoringResult.resultLabel,

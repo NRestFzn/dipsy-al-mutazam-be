@@ -38,6 +38,9 @@ export default class QuestionnaireSubmission extends BaseSchema {
   resultKey: string | null
 
   @Column({ allowNull: true, type: DataTypes.STRING })
+  academicYear: string | null
+
+  @Column({ allowNull: true, type: DataTypes.STRING })
   resultLabel: string | null
 
   @Column({ allowNull: true, type: DataTypes.BOOLEAN })
