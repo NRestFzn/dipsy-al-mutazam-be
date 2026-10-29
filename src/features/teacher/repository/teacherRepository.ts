@@ -24,6 +24,18 @@ export class TeacherRepository {
     const pageSize = Number(req.query.pageSize ?? 10)
     const search = String(req.query.search ?? '').trim()
     const roleName = String(req.query.roleName ?? '').trim()
+    const orderQuery = String(req.query.order ?? '').trim()
+
+    let order: any = [['fullname', 'ASC']]
+
+    if (orderQuery) {
+      try {
+        const parsed = JSON.parse(orderQuery)
+        if (Array.isArray(parsed) && parsed.length > 0) order = parsed
+      } catch (error) {
+        order = [['fullname', 'ASC']]
+      }
+    }
 
     const where: Record<string, any> = {}
 
@@ -49,7 +61,7 @@ export class TeacherRepository {
       distinct: true,
       limit: pageSize,
       offset: (page - 1) * pageSize,
-      order: [['fullname', 'ASC']],
+      order,
     })
 
     const ids = rows.map((row) => row.id)
