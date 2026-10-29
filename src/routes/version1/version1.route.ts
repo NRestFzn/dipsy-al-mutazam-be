@@ -10,6 +10,7 @@ import { StudentController } from './controller/student.controller'
 import { UserController } from './controller/user.controller'
 import { QuestionnaireCategoryController } from './controller/questionnaireCategory.controller'
 import { CounselorAssignmentController } from './controller/counselorAssignment.controller'
+import { AcademicYearController } from './controller/academicYear.controller'
 
 const Route: Router = express.Router()
 
@@ -24,5 +25,6 @@ Route.use('/student', StudentController)
 Route.use('/user', UserController)
 Route.use('/questionnaire-category', QuestionnaireCategoryController)
 Route.use('/counselor-assignment', CounselorAssignmentController)
+Route.use('/academic-year', AcademicYearController)
 
 export { Route as v1Route }
