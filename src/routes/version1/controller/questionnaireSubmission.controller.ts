@@ -198,21 +198,13 @@ route.get(
     let academicYear = query.academicYear
     let assignedClassIds: string[] | undefined = undefined
 
-    if (effectiveRole === RoleId.gurubk) {
-      if (!academicYear) {
-        academicYear =
-          await counselorAssignmentRepository.resolveDefaultAcademicYear(
-            user.uid
-          )
-      }
-      assignedClassIds =
-        await counselorAssignmentRepository.getAssignedClassIds(
-          user.uid,
-          academicYear
-        )
-    } else if (effectiveRole === RoleId.walikelas) {
+    // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
+    if (
+      user.RoleIds.includes(RoleId.walikelas) &&
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
+    ) {
       const currentAcademicYear = await resolveCurrentAcademicYear()
-      // Wali Kelas hanya boleh melihat kelas yang sedang atau pernah ia ampu
       if (query.academicYear && query.academicYear !== currentAcademicYear) {
         const taughtHistory = await StudentClassHistory.findOne({
           where: {
@@ -296,8 +288,12 @@ route.get(
     const query: SummarizeByStudentIdQuery =
       summarizeByStudentIdQuery.validateSync(req.query)
 
-    // If request is from Wali Kelas (and not Guru BK or TU), verify student is in their class
-    if (getEffectiveRole(req, user) === RoleId.walikelas) {
+    // If request is from Wali Kelas (and not Guru BK), verify student is in their class
+    if (
+      user.RoleIds.includes(RoleId.walikelas) &&
+      !user.RoleIds.includes(RoleId.gurubk) &&
+      !user.RoleIds.includes(RoleId.tu)
+    ) {
       const currentAcademicYear = await resolveCurrentAcademicYear()
       const assignedClasses = await HomeroomAssignment.findAll({
         where: {
@@ -402,8 +398,7 @@ route.post(
     const activeRoleId = req.header('x-active-role')
 
     const isTeacher =
-      (activeRoleId === RoleId.tu &&
-        user.RoleIds.includes(RoleId.tu)) ||
+      (activeRoleId === RoleId.tu && user.RoleIds.includes(RoleId.tu)) ||
       (activeRoleId === RoleId.gurubk &&
         user.RoleIds.includes(RoleId.gurubk)) ||
       (activeRoleId === RoleId.walikelas &&

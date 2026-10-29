@@ -6,7 +6,6 @@ import UserHasRoles from '@/database/model/userHasRoles'
 import Class from '@/database/model/class'
 import Grade from '@/database/model/grade'
 import HomeroomAssignment from '@/database/model/homeroomAssignment'
-import CounselorClassAssignment from '@/database/model/counselorClassAssignment'
 import { resolveCurrentAcademicYear } from '../../class/repository/classRepository'
 import { db } from '@/database/databaseConnection'
 import { ErrorResponse } from '@/libs/http/ErrorResponse'
@@ -67,16 +66,6 @@ export class TeacherRepository {
         })
       : []
 
-    const counselorAssignments = ids.length
-      ? await CounselorClassAssignment.findAll({
-          where: {
-            UserId: { [Op.in]: ids },
-            academicYear,
-          },
-          include: [{ model: Class, include: [Grade] }],
-        })
-      : []
-
     const data: TeacherDto[] = rows.map((row) => ({
       id: row.id,
       fullname: row.fullname,
@@ -87,23 +76,13 @@ export class TeacherRepository {
         name: role.name,
       })) as any,
       homeroomClasses: assignments
-        .filter((item) => item.UserId === row.id && ((item as any).class || (item as any).Class))
+        .filter((item) => item.UserId === row.id && (item as any).class)
         .map((item) => {
-          const cls = (item as any).class || (item as any).Class
+          const cls = (item as any).class
           return {
             id: cls.id,
             name: cls.name,
-            gradeName: (cls.grade || cls.Grade)?.name ?? null,
-          }
-        }),
-      counselorClasses: counselorAssignments
-        .filter((item) => item.UserId === row.id && ((item as any).class || (item as any).Class))
-        .map((item) => {
-          const cls = (item as any).class || (item as any).Class
-          return {
-            id: cls.id,
-            name: cls.name,
-            gradeName: (cls.grade || cls.Grade)?.name ?? null,
+            gradeName: cls.grade?.name ?? null,
           }
         }),
       createdAt: row.createdAt,
@@ -143,11 +122,7 @@ export class TeacherRepository {
       })
 
       if (duplicate) {
-        throw new ErrorResponse.BaseResponse(
-          'auth.emailUsed',
-          'Conflict',
-          409
-        )
+        throw new ErrorResponse.BaseResponse('auth.emailUsed', 'Conflict', 409)
       }
 
       const role = await this.resolveRole(formData.roleName)
@@ -161,10 +136,9 @@ export class TeacherRepository {
         { transaction }
       )
 
-      await UserHasRoles.create(
-        { UserId: user.id, RoleId: role.id } as any,
-        { transaction }
-      )
+      await UserHasRoles.create({ UserId: user.id, RoleId: role.id } as any, {
+        transaction,
+      })
     })
   }
 
@@ -202,10 +176,9 @@ export class TeacherRepository {
         const role = await this.resolveRole(formData.roleName)
 
         await UserHasRoles.destroy({ where: { UserId: id }, transaction })
-        await UserHasRoles.create(
-          { UserId: id, RoleId: role.id } as any,
-          { transaction }
-        )
+        await UserHasRoles.create({ UserId: id, RoleId: role.id } as any, {
+          transaction,
+        })
       }
     })
   }
