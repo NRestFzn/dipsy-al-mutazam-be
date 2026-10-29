@@ -19,7 +19,7 @@ const route = express.Router()
 route.post(
   '/',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
@@ -53,7 +53,7 @@ route.get(
 route.get(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu, RoleId.gurubk]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: QuestionnaireCategoryQuery = req.getParams()
 
@@ -73,7 +73,7 @@ route.get(
 route.delete(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const params: QuestionnaireCategoryQuery = req.getParams()
 
@@ -92,7 +92,7 @@ route.delete(
 route.put(
   '/:id',
   authorization(),
-  permissionAccess([RoleId.gurubk]),
+  permissionAccess([RoleId.tu]),
   asyncHandler(async (req: Request, res: Response) => {
     const formData = req.getBody()
 
