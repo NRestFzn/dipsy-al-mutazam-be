@@ -79,6 +79,7 @@ export interface IGetSummaryOptionsByClass extends IGetSummaryOptions {
 
 export interface IGetSummaryOptionsByStudent extends IGetSummaryOptions {
   UserId: string
+  includeAllYears?: boolean
 }
 
 export interface ISummarizeStudentByClass {
